@@ -10,9 +10,10 @@ from fastapi import FastAPI, Request, Response
 
 from app import __version__
 from app.api import comments, health
+from app.core import db
 from app.core.config import get_settings
-from app.core.db import dispose_engine, init_engine
 from app.core.logging import configure_logging
+from app.metrics import register_pool_gauges, setup_metrics
 
 settings = get_settings()
 configure_logging(settings.log_level)
@@ -22,9 +23,9 @@ log = structlog.get_logger()
 @asynccontextmanager
 async def lifespan(_: FastAPI) -> AsyncIterator[None]:
     log.info("startup", app=settings.app_name, env=settings.app_env, version=__version__)
-    init_engine()
+    db.init_engine()
     yield
-    await dispose_engine()
+    await db.dispose_engine()
     log.info("shutdown")
 
 
@@ -58,6 +59,9 @@ async def request_logging(
         )
     return response
 
+
+setup_metrics(app)
+register_pool_gauges(lambda: db._engine.pool if db._engine is not None else None)
 
 app.include_router(health.router)
 app.include_router(comments.router)

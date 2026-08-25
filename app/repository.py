@@ -5,15 +5,18 @@ from collections.abc import Sequence
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from app.metrics import COMMENTS_CREATED, track_db
 from app.models import Comment
 from app.schemas import CommentCreate
 
 
 async def create_comment(session: AsyncSession, data: CommentCreate) -> Comment:
     comment = Comment(email=data.email, comment=data.comment, content_id=data.content_id)
-    session.add(comment)
-    await session.commit()
-    await session.refresh(comment)
+    async with track_db("insert"):
+        session.add(comment)
+        await session.commit()
+        await session.refresh(comment)
+    COMMENTS_CREATED.inc()
     return comment
 
 
@@ -27,4 +30,5 @@ async def list_comments(
         .limit(limit)
         .offset(offset)
     )
-    return (await session.execute(stmt)).scalars().all()
+    async with track_db("select"):
+        return (await session.execute(stmt)).scalars().all()
