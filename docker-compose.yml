@@ -1,3 +1,8 @@
+x-app-env: &app-env
+  DATABASE_URL: postgresql+asyncpg://comments:comments@postgres:5432/comments
+  APP_ENV: local
+  LOG_LEVEL: INFO
+
 services:
   postgres:
     image: postgres:16-alpine
@@ -15,6 +20,27 @@ services:
       interval: 5s
       timeout: 3s
       retries: 10
+
+  # Roda as migracoes e termina. Espelha o Helm hook pre-install/pre-upgrade.
+  migrate:
+    build: .
+    image: comments-api:dev
+    command: ["alembic", "-c", "app/alembic.ini", "upgrade", "head"]
+    environment: *app-env
+    depends_on:
+      postgres:
+        condition: service_healthy
+
+  api:
+    build: .
+    image: comments-api:dev
+    container_name: comments-api
+    ports:
+      - "8000:8000"
+    environment: *app-env
+    depends_on:
+      migrate:
+        condition: service_completed_successfully
 
 volumes:
   pgdata:

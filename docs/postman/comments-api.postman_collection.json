@@ -1,0 +1,194 @@
+{
+  "info": {
+    "name": "Comments API",
+    "description": "Desafio DevOps Sr — API de Comentários (FastAPI + PostgreSQL).\n\nVariáveis:\n- `baseUrl`: http://localhost:8000 (local) ou URL do ALB (cloud)\n- `contentId`: id da matéria usado nos exemplos",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "variable": [
+    { "key": "baseUrl", "value": "http://localhost:8000" },
+    { "key": "contentId", "value": "materia-42" }
+  ],
+  "item": [
+    {
+      "name": "Health",
+      "item": [
+        {
+          "name": "GET /health (liveness)",
+          "request": {
+            "method": "GET",
+            "url": "{{baseUrl}}/health"
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('200', () => pm.response.to.have.status(200));",
+                  "pm.test('status ok', () => pm.expect(pm.response.json().status).to.eql('ok'));",
+                  "pm.test('x-request-id presente', () => pm.expect(pm.response.headers.has('x-request-id')).to.be.true);"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "GET /ready (readiness — checa DB)",
+          "request": {
+            "method": "GET",
+            "url": "{{baseUrl}}/ready"
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('200 com banco', () => pm.response.to.have.status(200));",
+                  "pm.test('db ok', () => pm.expect(pm.response.json().db).to.eql('ok'));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "GET /metrics (Prometheus)",
+          "request": {
+            "method": "GET",
+            "url": "{{baseUrl}}/metrics"
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('200', () => pm.response.to.have.status(200));",
+                  "pm.test('formato prometheus', () => pm.expect(pm.response.headers.get('content-type')).to.include('text/plain'));",
+                  "pm.test('http_requests_total presente', () => pm.expect(pm.response.text()).to.include('http_requests_total'));",
+                  "pm.test('app_info presente', () => pm.expect(pm.response.text()).to.include('app_info'));"
+                ]
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "Comments",
+      "item": [
+        {
+          "name": "POST /api/comment/new",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "url": "{{baseUrl}}/api/comment/new",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"ana@example.com\",\n  \"comment\": \"Ótimo artigo!\",\n  \"content_id\": \"{{contentId}}\"\n}"
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('201', () => pm.response.to.have.status(201));",
+                  "const b = pm.response.json();",
+                  "pm.test('retorna id e created_at', () => { pm.expect(b.id).to.be.a('string'); pm.expect(b.created_at).to.be.a('string'); });",
+                  "pm.collectionVariables.set('lastCommentId', b.id);"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "GET /api/comment/list/{content_id}",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{baseUrl}}/api/comment/list/{{contentId}}?limit=50&offset=0",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "comment", "list", "{{contentId}}"],
+              "query": [
+                { "key": "limit", "value": "50", "description": "1..200 (default 50)" },
+                { "key": "offset", "value": "0", "description": ">= 0" }
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('200', () => pm.response.to.have.status(200));",
+                  "const b = pm.response.json();",
+                  "pm.test('estrutura', () => { pm.expect(b).to.have.keys('content_id','count','items'); pm.expect(b.count).to.eql(b.items.length); });",
+                  "pm.test('contém o último criado', () => pm.expect(b.items.map(i => i.id)).to.include(pm.collectionVariables.get('lastCommentId')));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "GET /api/comment/list/{content_id} — vazio (200)",
+          "request": {
+            "method": "GET",
+            "url": "{{baseUrl}}/api/comment/list/materia-inexistente"
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('200 mesmo sem itens', () => pm.response.to.have.status(200));",
+                  "pm.test('lista vazia', () => pm.expect(pm.response.json().count).to.eql(0));"
+                ]
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "Validação (422)",
+      "item": [
+        {
+          "name": "email inválido",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "url": "{{baseUrl}}/api/comment/new",
+            "body": { "mode": "raw", "raw": "{\n  \"email\": \"nao-e-email\",\n  \"comment\": \"x\",\n  \"content_id\": \"m\"\n}" }
+          },
+          "event": [{ "listen": "test", "script": { "exec": ["pm.test('422', () => pm.response.to.have.status(422));"] } }]
+        },
+        {
+          "name": "comentário vazio",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "url": "{{baseUrl}}/api/comment/new",
+            "body": { "mode": "raw", "raw": "{\n  \"email\": \"a@b.co\",\n  \"comment\": \"\",\n  \"content_id\": \"m\"\n}" }
+          },
+          "event": [{ "listen": "test", "script": { "exec": ["pm.test('422', () => pm.response.to.have.status(422));"] } }]
+        },
+        {
+          "name": "campo faltando (content_id)",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "url": "{{baseUrl}}/api/comment/new",
+            "body": { "mode": "raw", "raw": "{\n  \"email\": \"a@b.co\",\n  \"comment\": \"x\"\n}" }
+          },
+          "event": [{ "listen": "test", "script": { "exec": ["pm.test('422', () => pm.response.to.have.status(422));"] } }]
+        },
+        {
+          "name": "limit fora do intervalo",
+          "request": {
+            "method": "GET",
+            "url": "{{baseUrl}}/api/comment/list/{{contentId}}?limit=0"
+          },
+          "event": [{ "listen": "test", "script": { "exec": ["pm.test('422', () => pm.response.to.have.status(422));"] } }]
+        }
+      ]
+    }
+  ]
+}

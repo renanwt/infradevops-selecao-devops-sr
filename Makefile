@@ -61,8 +61,8 @@ migrate: ## Aplica migracoes Alembic
 docker-build: ## Build da imagem
 	docker build -t $(IMAGE):$(TAG) .
 
-docker-run: ## Roda a imagem localmente
-	docker run --rm -p 8000:8000 --env-file .env $(IMAGE):$(TAG)
+docker-run: ## Sobe stack completa (postgres + migrate + api)
+	docker compose up --build
 
 clean: ## Remove artefatos
 	rm -rf $(VENV) .pytest_cache .mypy_cache .ruff_cache .coverage htmlcov dist build *.egg-info
