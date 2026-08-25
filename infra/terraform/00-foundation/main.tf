@@ -20,3 +20,9 @@ module "network" {
   single_nat_gateway = var.single_nat_gateway
   cluster_name       = local.name
 }
+
+module "ecr" {
+  source = "../modules/ecr"
+
+  name = var.project
+}
