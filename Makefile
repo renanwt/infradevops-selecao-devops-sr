@@ -56,7 +56,7 @@ db-down: ## Derruba Postgres local
 	docker compose down -v
 
 migrate: ## Aplica migracoes Alembic
-	$(BIN)/alembic upgrade head
+	$(BIN)/alembic -c app/alembic.ini upgrade head
 
 docker-build: ## Build da imagem
 	docker build -t $(IMAGE):$(TAG) .

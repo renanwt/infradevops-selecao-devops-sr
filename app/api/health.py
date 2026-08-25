@@ -7,6 +7,8 @@
 
 from fastapi import APIRouter, Response, status
 
+from app.core import db
+
 router = APIRouter(tags=["health"])
 
 
@@ -17,9 +19,7 @@ async def health() -> dict[str, str]:
 
 @router.get("/ready")
 async def ready(response: Response) -> dict[str, str]:
-    # A checagem de banco e conectada no commit de persistencia.
-    db_ok = True
-    if not db_ok:
+    if not await db.check_db():
         response.status_code = status.HTTP_503_SERVICE_UNAVAILABLE
         return {"status": "unavailable", "db": "error"}
     return {"status": "ready", "db": "ok"}

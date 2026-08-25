@@ -15,7 +15,7 @@ class Settings(BaseSettings):
     log_level: str = "INFO"
 
     database_url: str = Field(
-        default="postgresql+asyncpg://comments:comments@localhost:5432/comments",
+        default="postgresql+asyncpg://comments:comments@localhost:5433/comments",
         description="URL SQLAlchemy async. Em cluster vem do Secret gerado pelo External Secrets.",
     )
     db_pool_size: int = 5

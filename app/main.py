@@ -11,6 +11,7 @@ from fastapi import FastAPI, Request, Response
 from app import __version__
 from app.api import health
 from app.core.config import get_settings
+from app.core.db import dispose_engine, init_engine
 from app.core.logging import configure_logging
 
 settings = get_settings()
@@ -21,7 +22,9 @@ log = structlog.get_logger()
 @asynccontextmanager
 async def lifespan(_: FastAPI) -> AsyncIterator[None]:
     log.info("startup", app=settings.app_name, env=settings.app_env, version=__version__)
+    init_engine()
     yield
+    await dispose_engine()
     log.info("shutdown")
 
 
