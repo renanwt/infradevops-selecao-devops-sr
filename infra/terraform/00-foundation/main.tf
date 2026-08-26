@@ -42,3 +42,18 @@ module "eks" {
   node_max_size       = var.node_max_size
   node_desired_size   = var.node_desired_size
 }
+
+module "rds" {
+  source = "../modules/rds"
+
+  name                      = local.name
+  vpc_id                    = module.network.vpc_id
+  db_subnet_group_name      = module.network.database_subnet_group_name
+  allowed_security_group_id = module.eks.node_security_group_id
+
+  instance_class        = var.db_instance_class
+  multi_az              = var.db_multi_az
+  backup_retention_days = var.db_backup_retention_days
+  deletion_protection   = var.db_deletion_protection
+  skip_final_snapshot   = var.db_skip_final_snapshot
+}

@@ -67,3 +67,30 @@ variable "node_desired_size" {
   type    = number
   default = 2
 }
+
+# --- rds --------------------------------------------------------------------
+variable "db_instance_class" {
+  type    = string
+  default = "db.t4g.micro"
+}
+
+variable "db_multi_az" {
+  description = "Multi-AZ dobra o custo; false no desafio."
+  type        = bool
+  default     = false
+}
+
+variable "db_backup_retention_days" {
+  type    = number
+  default = 1
+}
+
+variable "db_deletion_protection" {
+  type    = bool
+  default = false
+}
+
+variable "db_skip_final_snapshot" {
+  type    = bool
+  default = true
+}

@@ -37,3 +37,20 @@ output "oidc_provider" {
 output "node_security_group_id" {
   value = module.eks.node_security_group_id
 }
+
+output "rds_address" {
+  value = module.rds.address
+}
+
+output "rds_port" {
+  value = module.rds.port
+}
+
+output "rds_db_name" {
+  value = module.rds.db_name
+}
+
+output "rds_master_user_secret_arn" {
+  description = "Secret gerenciado pela AWS com as credenciais do master."
+  value       = module.rds.master_user_secret_arn
+}
