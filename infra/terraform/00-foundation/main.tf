@@ -57,3 +57,18 @@ module "rds" {
   deletion_protection   = var.db_deletion_protection
   skip_final_snapshot   = var.db_skip_final_snapshot
 }
+
+module "iam" {
+  source = "../modules/iam"
+
+  name              = local.name
+  oidc_provider_arn = module.eks.oidc_provider_arn
+  secret_arns       = [module.rds.master_user_secret_arn]
+
+  ecr_repository_arn = module.ecr.repository_arn
+  eks_cluster_name   = module.eks.cluster_name
+  eks_cluster_arn    = module.eks.cluster_arn
+  tfstate_bucket     = var.tfstate_bucket
+  github_repository  = var.github_repository
+  app_namespace      = var.app_namespace
+}

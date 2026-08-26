@@ -94,3 +94,20 @@ variable "db_skip_final_snapshot" {
   type    = bool
   default = true
 }
+
+# --- iam / ci ---------------------------------------------------------------
+variable "github_repository" {
+  description = "owner/repo do fork (trust policy do OIDC do GitHub Actions)."
+  type        = string
+  default     = "renanwt/infradevops-selecao-devops-sr"
+}
+
+variable "tfstate_bucket" {
+  type    = string
+  default = "comments-api-tfstate-208597681536"
+}
+
+variable "app_namespace" {
+  type    = string
+  default = "comments"
+}

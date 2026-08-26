@@ -54,3 +54,15 @@ output "rds_master_user_secret_arn" {
   description = "Secret gerenciado pela AWS com as credenciais do master."
   value       = module.rds.master_user_secret_arn
 }
+
+output "external_secrets_role_arn" {
+  value = module.iam.external_secrets_role_arn
+}
+
+output "alb_controller_role_arn" {
+  value = module.iam.alb_controller_role_arn
+}
+
+output "github_actions_role_arn" {
+  value = module.iam.github_actions_role_arn
+}
