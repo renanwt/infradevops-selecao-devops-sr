@@ -34,3 +34,36 @@ variable "single_nat_gateway" {
   type        = bool
   default     = true
 }
+
+# --- eks --------------------------------------------------------------------
+variable "kubernetes_version" {
+  description = "Versao do EKS em STANDARD_SUPPORT."
+  type        = string
+  default     = "1.35"
+}
+
+variable "eks_public_access_cidrs" {
+  description = "CIDRs autorizados no endpoint publico da API do cluster."
+  type        = list(string)
+  default     = ["0.0.0.0/0"]
+}
+
+variable "node_instance_type" {
+  type    = string
+  default = "t3.small"
+}
+
+variable "node_min_size" {
+  type    = number
+  default = 2
+}
+
+variable "node_max_size" {
+  type    = number
+  default = 3
+}
+
+variable "node_desired_size" {
+  type    = number
+  default = 2
+}

@@ -26,3 +26,19 @@ module "ecr" {
 
   name = var.project
 }
+
+module "eks" {
+  source = "../modules/eks"
+
+  name               = local.name
+  kubernetes_version = var.kubernetes_version
+  vpc_id             = module.network.vpc_id
+  vpc_cidr           = module.network.vpc_cidr
+  private_subnet_ids = module.network.private_subnet_ids
+
+  public_access_cidrs = var.eks_public_access_cidrs
+  node_instance_type  = var.node_instance_type
+  node_min_size       = var.node_min_size
+  node_max_size       = var.node_max_size
+  node_desired_size   = var.node_desired_size
+}
