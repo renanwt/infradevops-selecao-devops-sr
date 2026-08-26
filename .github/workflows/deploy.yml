@@ -1,0 +1,150 @@
+name: deploy
+
+# Deploy no EKS via Helm. Dispara automaticamente quando o workflow `ci`
+# termina com sucesso na main (imagem ja publicada) ou manualmente com uma tag.
+
+on:
+  workflow_run:
+    workflows: [ci]
+    types: [completed]
+    branches: [main]
+  workflow_dispatch:
+    inputs:
+      tag:
+        description: "Tag da imagem (ex.: sha-abc1234). Vazio = sha do commit atual."
+        required: false
+        default: ""
+
+permissions:
+  contents: read
+  id-token: write
+
+concurrency:
+  group: deploy-dev
+  cancel-in-progress: false
+
+env:
+  AWS_REGION: us-east-1
+  CLUSTER_NAME: comments-api-dev
+  NAMESPACE: comments
+  RELEASE: comments-api
+  CHART_DIR: deploy/helm/comments-api
+  ECR_REPOSITORY: comments-api
+
+jobs:
+  deploy:
+    name: helm upgrade (dev)
+    # workflow_run: so se o ci passou. dispatch: sempre.
+    if: github.event_name == 'workflow_dispatch' || github.event.workflow_run.conclusion == 'success'
+    runs-on: ubuntu-latest
+    environment:
+      name: dev
+      url: ${{ steps.endpoint.outputs.url }}
+    steps:
+      # Mesmo commit que gerou a imagem (workflow_run roda no contexto da main).
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.workflow_run.head_sha || github.sha }}
+
+      - name: resolve tag
+        id: tag
+        env:
+          INPUT_TAG: ${{ github.event.inputs.tag }}
+          HEAD_SHA: ${{ github.event.workflow_run.head_sha || github.sha }}
+        run: |
+          TAG="${INPUT_TAG:-sha-${HEAD_SHA::7}}"
+          echo "tag=$TAG" >> "$GITHUB_OUTPUT"
+          echo "imagem: $TAG"
+
+      - uses: aws-actions/configure-aws-credentials@v4
+        with:
+          role-to-assume: ${{ vars.AWS_ROLE_ARN }}
+          aws-region: ${{ env.AWS_REGION }}
+
+      - name: imagem existe no ECR?
+        run: |
+          aws ecr describe-images --repository-name "$ECR_REPOSITORY" \
+            --image-ids imageTag="${{ steps.tag.outputs.tag }}" \
+            --query 'imageDetails[0].[imageTags[0],imagePushedAt]' --output text
+
+      - uses: azure/setup-helm@v4
+        with:
+          version: v3.16.4
+
+      - name: kubeconfig
+        run: aws eks update-kubeconfig --name "$CLUSTER_NAME" --region "$AWS_REGION"
+
+      # --atomic: se o rollout falhar, volta sozinho para a revisao anterior.
+      - name: helm upgrade --install
+        run: |
+          helm upgrade --install "$RELEASE" "$CHART_DIR" \
+            --namespace "$NAMESPACE" \
+            -f "$CHART_DIR/values-dev.yaml" \
+            --set image.tag="${{ steps.tag.outputs.tag }}" \
+            --atomic --wait --timeout 5m
+          helm history "$RELEASE" -n "$NAMESPACE" --max 5
+
+      - name: rollout + pods
+        run: |
+          kubectl -n "$NAMESPACE" rollout status deploy/"$RELEASE" --timeout=120s
+          kubectl -n "$NAMESPACE" get pods -o wide
+          kubectl -n "$NAMESPACE" get hpa,pdb,externalsecret
+
+      - name: endpoint do ALB
+        id: endpoint
+        run: |
+          for i in $(seq 1 30); do
+            HOST=$(kubectl -n "$NAMESPACE" get ingress "$RELEASE" \
+              -o jsonpath='{.status.loadBalancer.ingress[0].hostname}' 2>/dev/null || true)
+            [ -n "$HOST" ] && break
+            sleep 10
+          done
+          [ -n "$HOST" ] || { echo "ingress sem hostname"; exit 1; }
+          echo "url=http://$HOST" >> "$GITHUB_OUTPUT"
+          echo "ALB: http://$HOST"
+
+      # ALB leva ~1-3 min para ficar healthy apos criar/alterar targets.
+      - name: smoke test
+        env:
+          URL: ${{ steps.endpoint.outputs.url }}
+        run: |
+          for i in $(seq 1 40); do
+            code=$(curl -s -o /dev/null -w '%{http_code}' "$URL/health" || true)
+            [ "$code" = "200" ] && break
+            echo "aguardando ALB... ($code)"; sleep 10
+          done
+          [ "$code" = "200" ] || { echo "/health nao respondeu 200"; exit 1; }
+
+          set -x
+          curl -fsS "$URL/health"
+          curl -fsS "$URL/ready"
+          curl -fsS -X POST "$URL/api/comment/new" -H 'content-type: application/json' \
+            -d '{"email":"ci@example.com","comment":"deploy ${{ steps.tag.outputs.tag }}","content_id":"smoke"}'
+          curl -fsS "$URL/api/comment/list/smoke?limit=1"
+          curl -fsS "$URL/metrics" | grep -E '^(app_info|http_requests_total)' | head -5
+
+      # Evidencia versionavel: pods Running + endpoint respondendo.
+      - name: evidência
+        if: always()
+        env:
+          URL: ${{ steps.endpoint.outputs.url }}
+        run: |
+          mkdir -p evidencia
+          {
+            echo "# deploy ${{ steps.tag.outputs.tag }} — $(date -u +%FT%TZ)"
+            echo; echo '## helm history'; helm history "$RELEASE" -n "$NAMESPACE" --max 5
+            echo; echo '## pods'; kubectl -n "$NAMESPACE" get pods -o wide
+            echo; echo '## hpa / pdb / externalsecret'; kubectl -n "$NAMESPACE" get hpa,pdb,externalsecret
+            echo; echo '## ingress'; kubectl -n "$NAMESPACE" get ingress
+            echo; echo "## endpoint: $URL"
+            echo; echo '## /health'; curl -s "$URL/health" || true
+          } > evidencia/deploy.txt 2>&1
+          cat evidencia/deploy.txt
+          cp evidencia/deploy.txt "$GITHUB_STEP_SUMMARY" || true
+
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: evidencia-deploy-${{ steps.tag.outputs.tag }}
+          path: evidencia/
+          retention-days: 30
