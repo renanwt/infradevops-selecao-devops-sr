@@ -40,6 +40,12 @@ resource "aws_db_parameter_group" "this" {
     value = "500"
   }
 
+  # TLS obrigatorio (asyncpg negocia SSL por padrao: sslmode=prefer)
+  parameter {
+    name  = "rds.force_ssl"
+    value = "1"
+  }
+
   lifecycle {
     create_before_destroy = true
   }
@@ -58,7 +64,8 @@ resource "aws_db_instance" "this" {
   db_name  = var.db_name
   username = var.master_username
 
-  manage_master_user_password = true
+  manage_master_user_password         = true
+  iam_database_authentication_enabled = true # sem custo; permite tokens IAM no futuro
 
   allocated_storage     = var.allocated_storage
   max_allocated_storage = var.max_allocated_storage # autoscaling de storage
@@ -84,6 +91,9 @@ resource "aws_db_instance" "this" {
   deletion_protection       = var.deletion_protection
   skip_final_snapshot       = var.skip_final_snapshot
   final_snapshot_identifier = var.skip_final_snapshot ? null : "${var.name}-final"
+
+  # logs do Postgres (inclui slow queries) no CloudWatch
+  enabled_cloudwatch_logs_exports = ["postgresql"]
 
   performance_insights_enabled = false # nao suportado em t4g.micro
   monitoring_interval          = 0     # enhanced monitoring custa CloudWatch

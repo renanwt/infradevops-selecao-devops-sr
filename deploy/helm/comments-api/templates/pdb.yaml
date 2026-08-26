@@ -4,6 +4,7 @@ apiVersion: policy/v1
 kind: PodDisruptionBudget
 metadata:
   name: {{ include "comments-api.fullname" . }}
+  namespace: {{ .Release.Namespace }}
   labels:
     {{- include "comments-api.labels" . | nindent 4 }}
 spec:

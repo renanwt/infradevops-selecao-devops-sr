@@ -47,3 +47,4 @@ deploy/helm/**/charts/
 Thumbs.db
 *.tfvars
 !*.tfvars.example
+.scan/

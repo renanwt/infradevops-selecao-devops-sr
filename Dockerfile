@@ -35,8 +35,12 @@ ENV PATH="/opt/venv/bin:$PATH" \
     PYTHONUNBUFFERED=1 \
     APP_ENV=prod
 
-# uid/gid fixos >= 10000 evitam colisao com usuarios do host
-RUN groupadd --system --gid 10001 app \
+# Patches de seguranca do SO (a base slim pode estar dias atras dos CVEs)
+# + uid/gid fixos >= 10000 (evitam colisao com usuarios do host)
+RUN apt-get update \
+    && apt-get upgrade -y --no-install-recommends \
+    && rm -rf /var/lib/apt/lists/* \
+    && groupadd --system --gid 10001 app \
     && useradd --system --uid 10001 --gid app --no-create-home --shell /usr/sbin/nologin app
 
 WORKDIR /srv

@@ -36,9 +36,10 @@ module "eks" {
   enabled_log_types                      = ["audit", "authenticator"]
   cloudwatch_log_group_retention_in_days = 7
 
-  # KMS para secrets do etcd: desligado (evita custo de chave); documentar
-  create_kms_key    = false
-  encryption_config = null
+  # Envelope encryption dos Secrets no etcd com chave KMS propria (~USD 1/mes)
+  create_kms_key                  = true
+  kms_key_deletion_window_in_days = 7
+  enable_kms_key_rotation         = true
 
   addons = {
     coredns = {

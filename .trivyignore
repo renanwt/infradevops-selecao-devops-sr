@@ -1,0 +1,12 @@
+# Misconfigs aceitas com justificativa (trivy config). Vulnerabilidades NAO sao ignoradas.
+
+# S3 do state: SSE-S3 + TLS obrigatorio + bloqueio publico. CMK = custo sem ganho aqui.
+AVD-AWS-0132
+
+# Endpoint publico do EKS: necessario para kubectl do dev e do CI (IPs dinamicos).
+# Autenticacao e IAM (access entries); restrinja via var eks_public_access_cidrs.
+AVD-AWS-0040
+AVD-AWS-0041
+
+# Egress irrestrito dos nos: precisam alcancar ECR/STS/updates via NAT. Padrao do modulo EKS.
+AVD-AWS-0104

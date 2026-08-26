@@ -7,6 +7,7 @@ apiVersion: batch/v1
 kind: Job
 metadata:
   name: {{ include "comments-api.fullname" . }}-migrate
+  namespace: {{ .Release.Namespace }}
   labels:
     {{- include "comments-api.labels" . | nindent 4 }}
     app.kubernetes.io/component: migration
