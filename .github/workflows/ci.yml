@@ -1,0 +1,59 @@
+name: ci
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+env:
+  CHART_DIR: deploy/helm/comments-api
+  K8S_VERSION: "1.35.0"
+
+jobs:
+  chart:
+    name: helm lint + kubeconform
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: azure/setup-helm@v4
+        with:
+          version: v3.16.4
+
+      - name: helm lint
+        run: |
+          helm lint "$CHART_DIR" --strict \
+            -f "$CHART_DIR/values-dev.yaml" --set image.tag=ci
+
+      - name: helm template
+        run: |
+          helm template comments-api "$CHART_DIR" -n comments \
+            -f "$CHART_DIR/values-dev.yaml" --set image.tag=ci > rendered.yaml
+          echo "objetos renderizados: $(grep -c '^kind:' rendered.yaml)"
+
+      # Valida os manifests contra os schemas da versao do cluster.
+      # CRDs (ExternalSecret) vem do catalogo da datree.
+      - uses: yokawasa/action-setup-kube-tools@v0.11.2
+        with:
+          kubeconform: "0.6.7"
+
+      - name: kubeconform
+        run: |
+          kubeconform -strict -summary \
+            -kubernetes-version "$K8S_VERSION" \
+            -schema-location default \
+            -schema-location 'https://raw.githubusercontent.com/datreeio/CRDs-catalog/main/{{.Group}}/{{.ResourceKind}}_{{.ResourceAPIVersion}}.json' \
+            rendered.yaml
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: rendered-manifests
+          path: rendered.yaml
+          retention-days: 7
