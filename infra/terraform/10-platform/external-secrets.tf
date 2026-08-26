@@ -22,6 +22,10 @@ resource "helm_release" "external_secrets" {
   wait    = true
   timeout = 600
 
+  # O webhook mutating do ALB Controller intercepta a criacao de Services; se o
+  # controller ainda nao estiver Ready, a instalacao falha ("no endpoints").
+  depends_on = [helm_release.alb_controller]
+
   values = [yamlencode({
     installCRDs = true
 
