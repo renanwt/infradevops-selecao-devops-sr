@@ -29,3 +29,15 @@ variable "external_secrets_chart_version" {
   type        = string
   default     = "2.9.0"
 }
+
+variable "alb_controller_chart_version" {
+  description = "Versao do chart eks/aws-load-balancer-controller."
+  type        = string
+  default     = "3.5.0"
+}
+
+variable "metrics_server_chart_version" {
+  description = "Versao do chart metrics-server/metrics-server."
+  type        = string
+  default     = "3.14.0"
+}
