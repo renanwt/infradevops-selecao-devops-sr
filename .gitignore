@@ -45,3 +45,5 @@ deploy/helm/**/charts/
 .idea/
 .DS_Store
 Thumbs.db
+*.tfvars
+!*.tfvars.example

@@ -111,3 +111,16 @@ variable "app_namespace" {
   type    = string
   default = "comments"
 }
+
+# --- custo ------------------------------------------------------------------
+variable "budget_limit_usd" {
+  description = "Limite mensal do AWS Budget."
+  type        = number
+  default     = 15
+}
+
+variable "budget_email" {
+  description = "E-mail para alertas de orcamento. Vazio desliga o budget."
+  type        = string
+  default     = ""
+}
