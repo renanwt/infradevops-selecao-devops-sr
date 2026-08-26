@@ -30,7 +30,7 @@ variable "instance_class" {
 
 variable "db_name" {
   type    = string
-  default = "comments"
+  default = "commentsdb" # "comments" e palavra reservada no RDS
 }
 
 variable "master_username" {
