@@ -217,6 +217,10 @@ resource "aws_eks_access_entry" "github_actions" {
   principal_arn = aws_iam_role.github_actions.arn
   type          = "STANDARD"
 
+  # Grupo K8s para RBAC adicional (CRDs como ExternalSecret nao entram na
+  # AmazonEKSAdminPolicy). Role/RoleBinding ficam no stack 10-platform.
+  kubernetes_groups = ["${var.app_namespace}-deployers"]
+
   tags = var.tags
 }
 

@@ -35,3 +35,40 @@ resource "kubernetes_namespace_v1" "app" {
     }
   }
 }
+
+# ---------------------------------------------------------------------------
+# RBAC extra para o pipeline (grupo do access entry do GitHub Actions).
+# AmazonEKSAdminPolicy (= ClusterRole admin) nao inclui CRDs; o chart cria um
+# ExternalSecret, entao concedemos so esse recurso, so neste namespace.
+# ---------------------------------------------------------------------------
+resource "kubernetes_role_v1" "deployer_crds" {
+  metadata {
+    name      = "deployer-crds"
+    namespace = kubernetes_namespace_v1.app.metadata[0].name
+  }
+
+  rule {
+    api_groups = ["external-secrets.io"]
+    resources  = ["externalsecrets"]
+    verbs      = ["get", "list", "watch", "create", "update", "patch", "delete"]
+  }
+}
+
+resource "kubernetes_role_binding_v1" "deployer_crds" {
+  metadata {
+    name      = "deployer-crds"
+    namespace = kubernetes_namespace_v1.app.metadata[0].name
+  }
+
+  role_ref {
+    api_group = "rbac.authorization.k8s.io"
+    kind      = "Role"
+    name      = kubernetes_role_v1.deployer_crds.metadata[0].name
+  }
+
+  subject {
+    api_group = "rbac.authorization.k8s.io"
+    kind      = "Group"
+    name      = "${var.app_namespace}-deployers"
+  }
+}
