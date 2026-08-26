@@ -12,6 +12,17 @@
 data "aws_caller_identity" "current" {}
 data "aws_region" "current" {}
 
+locals {
+  github_owner = split("/", var.github_repository)[0]
+  github_repo  = split("/", var.github_repository)[1]
+  github_subjects = compact([
+    var.github_repository,
+    var.github_owner_id != null && var.github_repository_id != null
+    ? "${local.github_owner}@${var.github_owner_id}/${local.github_repo}@${var.github_repository_id}"
+    : null,
+  ])
+}
+
 # --- External Secrets Operator ---------------------------------------------
 module "external_secrets_irsa" {
   source  = "terraform-aws-modules/iam/aws//modules/iam-role-for-service-accounts"
@@ -101,15 +112,19 @@ data "aws_iam_policy_document" "github_trust" {
       values   = ["sts.amazonaws.com"]
     }
 
-    # Apenas este repositorio: branch main (deploy/apply) e pull requests (plan).
+    # Apenas este repositorio: branch main (deploy/apply), pull requests (plan)
+    # e environments. O GitHub emite o `sub` no formato imutavel
+    # (owner@id/repo@id) - aceitamos ele e o formato legado, sem wildcard no nome.
     condition {
       test     = "StringLike"
       variable = "token.actions.githubusercontent.com:sub"
-      values = [
-        "repo:${var.github_repository}:ref:refs/heads/main",
-        "repo:${var.github_repository}:pull_request",
-        "repo:${var.github_repository}:environment:infra-apply",
-      ]
+      values = flatten([
+        for repo in local.github_subjects : [
+          "repo:${repo}:ref:refs/heads/main",
+          "repo:${repo}:pull_request",
+          "repo:${repo}:environment:*",
+        ]
+      ])
     }
   }
 }

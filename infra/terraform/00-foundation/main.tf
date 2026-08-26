@@ -65,12 +65,14 @@ module "iam" {
   oidc_provider_arn = module.eks.oidc_provider_arn
   secret_arns       = [module.rds.master_user_secret_arn]
 
-  ecr_repository_arn = module.ecr.repository_arn
-  eks_cluster_name   = module.eks.cluster_name
-  eks_cluster_arn    = module.eks.cluster_arn
-  tfstate_bucket     = var.tfstate_bucket
-  github_repository  = var.github_repository
-  app_namespace      = var.app_namespace
+  ecr_repository_arn   = module.ecr.repository_arn
+  eks_cluster_name     = module.eks.cluster_name
+  eks_cluster_arn      = module.eks.cluster_arn
+  tfstate_bucket       = var.tfstate_bucket
+  github_repository    = var.github_repository
+  github_owner_id      = var.github_owner_id
+  github_repository_id = var.github_repository_id
+  app_namespace        = var.app_namespace
 
   github_actions_can_apply = var.github_actions_can_apply
 }

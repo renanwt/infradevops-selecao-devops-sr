@@ -35,6 +35,18 @@ variable "github_repository" {
   type        = string
 }
 
+variable "github_owner_id" {
+  description = "ID numerico do owner no GitHub (gh api users/<owner> --jq .id). Necessario para o sub imutavel."
+  type        = number
+  default     = null
+}
+
+variable "github_repository_id" {
+  description = "ID numerico do repositorio (gh api repos/<owner>/<repo> --jq .id)."
+  type        = number
+  default     = null
+}
+
 variable "app_namespace" {
   description = "Namespace onde o pipeline pode fazer deploy."
   type        = string

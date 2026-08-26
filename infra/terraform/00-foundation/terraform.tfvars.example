@@ -25,7 +25,9 @@ db_deletion_protection   = false # producao: true
 db_skip_final_snapshot   = true  # producao: false
 
 # --- iam / ci ---
-github_repository = "renanwt/infradevops-selecao-devops-sr"
+github_repository    = "renanwt/infradevops-selecao-devops-sr"
+github_owner_id      = 107125053  # gh api users/<owner> --jq .id
+github_repository_id = 1346344251 # gh api repos/<owner>/<repo> --jq .id
 tfstate_bucket    = "comments-api-tfstate-208597681536"
 app_namespace     = "comments"
 github_actions_can_apply = false # true = apply pelo pipeline (AdministratorAccess)

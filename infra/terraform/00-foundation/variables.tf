@@ -102,6 +102,18 @@ variable "github_repository" {
   default     = "renanwt/infradevops-selecao-devops-sr"
 }
 
+variable "github_owner_id" {
+  description = "ID numerico do owner do GitHub (sub imutavel do OIDC)."
+  type        = number
+  default     = 107125053
+}
+
+variable "github_repository_id" {
+  description = "ID numerico do repositorio do GitHub (sub imutavel do OIDC)."
+  type        = number
+  default     = 1346344251
+}
+
 variable "tfstate_bucket" {
   type    = string
   default = "comments-api-tfstate-208597681536"
