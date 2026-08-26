@@ -1,0 +1,7 @@
+apiVersion: v2
+name: comments-api
+description: API de Comentarios (FastAPI + PostgreSQL/RDS)
+type: application
+version: 0.1.0
+appVersion: "0.1.0"
+keywords: [fastapi, comments, postgres]

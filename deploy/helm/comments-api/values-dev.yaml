@@ -1,0 +1,9 @@
+# Ambiente dev (outputs do 00-foundation). image.tag vem do pipeline (--set).
+database:
+  host: comments-api-dev.cbmuiwlq2oit.us-east-1.rds.amazonaws.com
+  name: commentsdb
+  secretArn: arn:aws:secretsmanager:us-east-1:208597681536:secret:rds!db-eb4bf65a-870f-42f6-bcca-99075f10db66-Gvv2GY
+
+env:
+  APP_ENV: dev
+  LOG_LEVEL: INFO

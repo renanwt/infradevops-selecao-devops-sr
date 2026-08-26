@@ -1,0 +1,7 @@
+{{ .Chart.Name }} {{ .Chart.Version }} (imagem {{ include "comments-api.image" . }})
+
+Pods:      kubectl -n {{ .Release.Namespace }} get pods -l app.kubernetes.io/instance={{ .Release.Name }}
+Secret DB: kubectl -n {{ .Release.Namespace }} get externalsecret {{ include "comments-api.dbSecretName" . }}
+{{- if .Values.ingress.enabled }}
+Endpoint:  kubectl -n {{ .Release.Namespace }} get ingress {{ include "comments-api.fullname" . }} -o jsonpath='{.status.loadBalancer.ingress[0].hostname}'
+{{- end }}

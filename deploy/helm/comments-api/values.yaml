@@ -1,0 +1,80 @@
+# Valores padrao. Sobrescreva por ambiente com -f values-<env>.yaml ou --set.
+
+image:
+  repository: 208597681536.dkr.ecr.us-east-1.amazonaws.com/comments-api
+  tag: ""            # obrigatorio: sha-<commit> (o pipeline preenche)
+  pullPolicy: IfNotPresent
+
+replicaCount: 2
+
+# --- banco (host/db vem dos outputs do Terraform; credenciais do Secrets Manager) ---
+database:
+  host: ""           # ex.: comments-api-dev.xxxx.us-east-1.rds.amazonaws.com
+  port: 5432
+  name: commentsdb
+  secretArn: ""      # arn:aws:secretsmanager:...:secret:rds!db-...
+  poolSize: 5
+  maxOverflow: 5
+
+externalSecret:
+  storeName: aws-secrets-manager
+  refreshInterval: 1h
+
+env:
+  APP_ENV: prod
+  LOG_LEVEL: INFO
+
+service:
+  port: 80
+  targetPort: 8000
+
+ingress:
+  enabled: true
+  className: alb
+  host: ""           # vazio = responde por qualquer host (usa o DNS do ALB)
+  annotations:
+    alb.ingress.kubernetes.io/scheme: internet-facing
+    alb.ingress.kubernetes.io/target-type: ip
+    alb.ingress.kubernetes.io/healthcheck-path: /health
+    alb.ingress.kubernetes.io/healthcheck-interval-seconds: "15"
+    alb.ingress.kubernetes.io/listen-ports: '[{"HTTP": 80}]'
+
+resources:
+  requests:
+    cpu: 100m
+    memory: 128Mi
+  limits:
+    memory: 256Mi   # sem limit de CPU: evita throttling; HPA usa requests
+
+probes:
+  liveness:
+    path: /health
+    initialDelaySeconds: 5
+    periodSeconds: 10
+    failureThreshold: 3
+  readiness:
+    path: /ready
+    initialDelaySeconds: 5
+    periodSeconds: 10
+    failureThreshold: 3
+  startup:
+    path: /health
+    periodSeconds: 2
+    failureThreshold: 15   # ate 30s para subir
+
+# Drena conexoes do ALB antes do SIGTERM
+terminationGracePeriodSeconds: 30
+preStopSleepSeconds: 5
+
+migration:
+  enabled: true
+  backoffLimit: 2
+  activeDeadlineSeconds: 300
+
+serviceAccount:
+  create: true
+  annotations: {}    # sem role IAM: a app nao chama APIs da AWS
+
+podAnnotations: {}
+nodeSelector: {}
+tolerations: []
