@@ -1,0 +1,60 @@
+{{- if .Values.migration.enabled }}
+# Roda `alembic upgrade head` ANTES de instalar/atualizar o Deployment.
+# Se a migracao falhar, o release aborta (e com --atomic volta a revisao anterior).
+# hook-delete-policy: remove o Job anterior antes de criar o novo e limpa em sucesso;
+# em falha o Job fica para `kubectl logs`.
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: {{ include "comments-api.fullname" . }}-migrate
+  labels:
+    {{- include "comments-api.labels" . | nindent 4 }}
+    app.kubernetes.io/component: migration
+  annotations:
+    helm.sh/hook: pre-install,pre-upgrade
+    helm.sh/hook-weight: "0"
+    helm.sh/hook-delete-policy: before-hook-creation,hook-succeeded
+spec:
+  backoffLimit: {{ .Values.migration.backoffLimit }}
+  activeDeadlineSeconds: {{ .Values.migration.activeDeadlineSeconds }}
+  ttlSecondsAfterFinished: 600
+  template:
+    metadata:
+      labels:
+        {{- include "comments-api.selectorLabels" . | nindent 8 }}
+        app.kubernetes.io/component: migration
+    spec:
+      restartPolicy: Never
+      serviceAccountName: {{ include "comments-api.serviceAccountName" . }}
+      automountServiceAccountToken: false
+      securityContext:
+        runAsNonRoot: true
+        runAsUser: 10001
+        runAsGroup: 10001
+        seccompProfile:
+          type: RuntimeDefault
+      containers:
+        - name: migrate
+          image: {{ include "comments-api.image" . }}
+          imagePullPolicy: {{ .Values.image.pullPolicy }}
+          command: ["alembic", "-c", "app/alembic.ini", "upgrade", "head"]
+          envFrom:
+            - configMapRef:
+                name: {{ include "comments-api.fullname" . }}
+            - secretRef:
+                name: {{ include "comments-api.dbSecretName" . }}
+          securityContext:
+            {{- include "comments-api.containerSecurityContext" . | nindent 12 }}
+          resources:
+            requests:
+              cpu: 50m
+              memory: 64Mi
+            limits:
+              memory: 128Mi
+          volumeMounts:
+            - name: tmp
+              mountPath: /tmp
+      volumes:
+        - name: tmp
+          emptyDir: {}
+{{- end }}
