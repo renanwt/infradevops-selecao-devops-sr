@@ -1,0 +1,16 @@
+# Store unico para o cluster. `jwt.serviceAccountRef` faz o ESO assumir a
+# role IRSA anotada na ServiceAccount.
+apiVersion: external-secrets.io/v1
+kind: ClusterSecretStore
+metadata:
+  name: {{ .Values.name }}
+spec:
+  provider:
+    aws:
+      service: SecretsManager
+      region: {{ .Values.region }}
+      auth:
+        jwt:
+          serviceAccountRef:
+            name: {{ .Values.serviceAccount.name }}
+            namespace: {{ .Values.serviceAccount.namespace }}

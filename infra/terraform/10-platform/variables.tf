@@ -23,3 +23,9 @@ variable "app_namespace" {
   type    = string
   default = "comments"
 }
+
+variable "external_secrets_chart_version" {
+  description = "Versao do chart external-secrets/external-secrets."
+  type        = string
+  default     = "2.9.0"
+}
