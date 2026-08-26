@@ -1,0 +1,34 @@
+# smoke test manual via ALB — 2026-08-26T23:34:41Z
+# endpoint: http://k8s-comments-comments-2c7257dc2d-274715840.us-east-1.elb.amazonaws.com
+
+$ curl http://k8s-comments-comments-2c7257dc2d-274715840.us-east-1.elb.amazonaws.com/health
+{"status":"ok"}
+[HTTP 200]
+
+$ curl http://k8s-comments-comments-2c7257dc2d-274715840.us-east-1.elb.amazonaws.com/ready
+{"status":"ready","db":"ok"}
+[HTTP 200]
+
+$ curl -X POST http://k8s-comments-comments-2c7257dc2d-274715840.us-east-1.elb.amazonaws.com/api/comment/new -d '{"email":"renan@example.com","comment":"segundo comentario","content_id":"materia-42"}'
+{"id":"2dad7499-531d-480d-903e-1ebd51b7dfff","email":"renan@example.com","comment":"segundo comentario","content_id":"materia-42","created_at":"2026-08-26T23:34:44.025029Z"}
+[HTTP 201]
+
+$ curl http://k8s-comments-comments-2c7257dc2d-274715840.us-east-1.elb.amazonaws.com/api/comment/list/materia-42?limit=5
+{"content_id":"materia-42","count":2,"items":[{"id":"2dad7499-531d-480d-903e-1ebd51b7dfff","email":"renan@example.com","comment":"segundo comentario","content_id":"materia-42","created_at":"2026-08-26T23:34:44.025029Z"},{"id":"2bb9c552-520c-46d2-8d34-b51f8688e25b","email":"renan@example.com","comment":"primeiro comentario na nuvem","content_id":"materia-42","created_at":"2026-08-26T23:33:57.220272Z"}]}
+[HTTP 200]
+
+$ curl -X POST http://k8s-comments-comments-2c7257dc2d-274715840.us-east-1.elb.amazonaws.com/api/comment/new -d '{"email":"invalido"}'   (validacao)
+{"detail":[{"type":"value_error","loc":["body","email"],"msg":"value is not a valid email address: An email address must have an @-sign.","input":"invalido","ctx":{"reason":"An email address must have
+[HTTP 422]
+
+
+$ curl http://k8s-comments-comments-2c7257dc2d-274715840.us-east-1.elb.amazonaws.com/metrics | grep -E 'app_info|http_requests_total|db_pool|comments_created'
+http_requests_total{method="GET",route="/health",status_class="2xx"} 48.0
+http_requests_total{method="GET",route="/ready",status_class="2xx"} 29.0
+http_requests_total{method="POST",route="/api/comment/new",status_class="2xx"} 1.0
+http_requests_total{method="POST",route="/api/comment/new",status_class="4xx"} 2.0
+http_requests_total{method="GET",route="/api/comment/list/{content_id}",status_class="2xx"} 2.0
+comments_created_total 1.0
+db_pool_connections{state="in_use"} 0.0
+db_pool_connections{state="idle"} 1.0
+app_info{version="0.1.0"} 1.0

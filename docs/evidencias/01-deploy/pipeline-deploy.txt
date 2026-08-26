@@ -1,0 +1,29 @@
+# deploy sha-8db5104 — 2026-08-26T23:32:57Z
+
+## helm history
+REVISION	UPDATED                 	STATUS  	CHART             	APP VERSION	DESCRIPTION     
+1       	Wed Aug 26 23:29:39 2026	deployed	comments-api-0.1.0	0.1.0      	Install complete
+
+## pods
+NAME                            READY   STATUS    RESTARTS   AGE     IP            NODE                         NOMINATED NODE   READINESS GATES
+comments-api-84f5f69444-h22zf   1/1     Running   0          2m52s   10.0.93.38    ip-10-0-95-55.ec2.internal   <none>           <none>
+comments-api-84f5f69444-tdbwj   1/1     Running   0          3m7s    10.0.71.242   ip-10-0-65-49.ec2.internal   <none>           <none>
+
+## hpa / pdb / externalsecret
+NAME                                               REFERENCE                 TARGETS       MINPODS   MAXPODS   REPLICAS   AGE
+horizontalpodautoscaler.autoscaling/comments-api   Deployment/comments-api   cpu: 2%/60%   2         5         2          3m8s
+
+NAME                                      MIN AVAILABLE   MAX UNAVAILABLE   ALLOWED DISRUPTIONS   AGE
+poddisruptionbudget.policy/comments-api   1               N/A               1                     3m8s
+
+NAME                                                 STORETYPE            STORE                 REFRESH INTERVAL   STATUS         READY   LAST SYNC
+externalsecret.external-secrets.io/comments-api-db   ClusterSecretStore   aws-secrets-manager   1h                 SecretSynced   True    3m19s
+
+## ingress
+NAME           CLASS   HOSTS   ADDRESS                                                                  PORTS   AGE
+comments-api   alb     *       k8s-comments-comments-2c7257dc2d-274715840.us-east-1.elb.amazonaws.com   80      3m9s
+
+## endpoint: http://k8s-comments-comments-2c7257dc2d-274715840.us-east-1.elb.amazonaws.com
+
+## /health
+{"status":"ok"}

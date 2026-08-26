@@ -1,0 +1,60 @@
+# kubectl — 2026-08-26T23:34:07Z
+
+$ kubectl get nodes -o wide
+NAME                         STATUS   ROLES    AGE     VERSION               INTERNAL-IP   EXTERNAL-IP   OS-IMAGE                        KERNEL-VERSIO
+ip-10-0-65-49.ec2.internal   Ready    <none>   3h53m   v1.35.6-eks-b3f9404   10.0.65.49    <none>        Amazon Linux 2023.12.20260817   6.12.100-125.
+ip-10-0-95-55.ec2.internal   Ready    <none>   3h53m   v1.35.6-eks-b3f9404   10.0.95.55    <none>        Amazon Linux 2023.12.20260817   6.12.100-125.
+
+$ kubectl -n comments get pods -o wide
+NAME                            READY   STATUS    RESTARTS   AGE     IP            NODE                         NOMINATED NODE   READINESS GATES
+comments-api-84f5f69444-h22zf   1/1     Running   0          4m4s    10.0.93.38    ip-10-0-95-55.ec2.internal   <none>           <none>
+comments-api-84f5f69444-tdbwj   1/1     Running   0          4m19s   10.0.71.242   ip-10-0-65-49.ec2.internal   <none>           <none>
+
+$ kubectl -n comments get deploy,svc,ingress,hpa,pdb,externalsecret,networkpolicy
+NAME                           READY   UP-TO-DATE   AVAILABLE   AGE
+deployment.apps/comments-api   2/2     2            2           4m21s
+
+NAME                   TYPE        CLUSTER-IP       EXTERNAL-IP   PORT(S)   AGE
+service/comments-api   ClusterIP   172.20.218.170   <none>        80/TCP    4m21s
+
+NAME                                     CLASS   HOSTS   ADDRESS                                                                  PORTS   AGE
+ingress.networking.k8s.io/comments-api   alb     *       k8s-comments-comments-2c7257dc2d-274715840.us-east-1.elb.amazonaws.com   80      4m21s
+
+NAME                                               REFERENCE                 TARGETS       MINPODS   MAXPODS   REPLICAS   AGE
+horizontalpodautoscaler.autoscaling/comments-api   Deployment/comments-api   cpu: 3%/60%   2         5         2          4m21s
+
+NAME                                      MIN AVAILABLE   MAX UNAVAILABLE   ALLOWED DISRUPTIONS   AGE
+poddisruptionbudget.policy/comments-api   1               N/A               1                     4m21s
+
+NAME                                                 STORETYPE            STORE                 REFRESH INTERVAL   STATUS         READY   LAST SYNC
+externalsecret.external-secrets.io/comments-api-db   ClusterSecretStore   aws-secrets-manager   1h                 SecretSynced   True    4m32s
+
+NAME                                           POD-SELECTOR                                                                  AGE
+networkpolicy.networking.k8s.io/comments-api   app.kubernetes.io/instance=comments-api,app.kubernetes.io/name=comments-api   4m21s
+
+$ kubectl -n comments describe pod (probes + securityContext)
+/health / /ready | runAsUser=10001 readOnlyRootFilesystem=true
+
+$ helm history comments-api -n comments
+REVISION	UPDATED                 	STATUS  	CHART             	APP VERSION	DESCRIPTION     
+1       	Wed Aug 26 23:29:39 2026	deployed	comments-api-0.1.0	0.1.0      	Install complete
+
+$ kubectl get pods -A (plataforma)
+NAMESPACE          NAME                                                READY   STATUS    RESTARTS   AGE
+external-secrets   external-secrets-7cfcf67cf7-5kmh8                   1/1     Running   0          22m
+external-secrets   external-secrets-cert-controller-68f4449466-tr4kp   1/1     Running   0          22m
+external-secrets   external-secrets-webhook-6f5f6f9f64-6865x           1/1     Running   0          22m
+kube-system        aws-load-balancer-controller-59b655bf5f-92tg6       1/1     Running   0          25m
+kube-system        aws-node-8t9gj                                      2/2     Running   0          22m
+kube-system        aws-node-spf8q                                      2/2     Running   0          22m
+kube-system        coredns-7f8bf85c76-5wbqx                            1/1     Running   0          3h52m
+kube-system        coredns-7f8bf85c76-czbh7                            1/1     Running   0          3h52m
+kube-system        ebs-csi-controller-b56cff65-2nnqn                   6/6     Running   0          3h52m
+kube-system        ebs-csi-controller-b56cff65-h27ps                   6/6     Running   0          3h52m
+kube-system        ebs-csi-node-jsttn                                  3/3     Running   0          3h52m
+kube-system        ebs-csi-node-wvnc2                                  3/3     Running   0          3h52m
+kube-system        eks-pod-identity-agent-hb6pp                        1/1     Running   0          3h52m
+kube-system        eks-pod-identity-agent-jh7l8                        1/1     Running   0          3h52m
+kube-system        kube-proxy-wc78s                                    1/1     Running   0          3h52m
+kube-system        kube-proxy-zcvtp                                    1/1     Running   0          3h52m
+kube-system        metrics-server-768c44d6b4-fzkbq                     1/1     Running   0          25m
