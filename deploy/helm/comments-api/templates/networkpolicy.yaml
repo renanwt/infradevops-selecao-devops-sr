@@ -1,0 +1,53 @@
+{{- if .Values.networkPolicy.enabled }}
+# Ingress: apenas ALB (IPs da VPC) na porta da app e Prometheus no /metrics.
+# Egress: DNS, RDS (5432) e HTTPS (ECR/STS nao sao usados pela app, mas o
+# Job de migracao compartilha o selector; 443 fica para evolucao/telemetria).
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: {{ include "comments-api.fullname" . }}
+  labels:
+    {{- include "comments-api.labels" . | nindent 4 }}
+spec:
+  podSelector:
+    matchLabels:
+      {{- include "comments-api.selectorLabels" . | nindent 6 }}
+  policyTypes: [Ingress, Egress]
+  ingress:
+    # ALB (target-type ip fala direto com o pod) - origem sao IPs da VPC
+    - from:
+        - ipBlock:
+            cidr: {{ .Values.networkPolicy.vpcCidr }}
+      ports:
+        - protocol: TCP
+          port: {{ .Values.service.targetPort }}
+    # Prometheus (namespace monitoring) faz scrape do /metrics
+    - from:
+        - namespaceSelector:
+            matchLabels:
+              kubernetes.io/metadata.name: {{ .Values.networkPolicy.monitoringNamespace }}
+      ports:
+        - protocol: TCP
+          port: {{ .Values.service.targetPort }}
+  egress:
+    # DNS do cluster
+    - to:
+        - namespaceSelector:
+            matchLabels:
+              kubernetes.io/metadata.name: kube-system
+          podSelector:
+            matchLabels:
+              k8s-app: kube-dns
+      ports:
+        - protocol: UDP
+          port: 53
+        - protocol: TCP
+          port: 53
+    # RDS (subnets database dentro da VPC)
+    - to:
+        - ipBlock:
+            cidr: {{ .Values.networkPolicy.vpcCidr }}
+      ports:
+        - protocol: TCP
+          port: 5432
+{{- end }}

@@ -5,7 +5,9 @@ metadata:
   labels:
     {{- include "comments-api.labels" . | nindent 4 }}
 spec:
+  {{- if not .Values.autoscaling.enabled }}
   replicas: {{ .Values.replicaCount }}
+  {{- end }}
   revisionHistoryLimit: 5
   strategy:
     type: RollingUpdate
@@ -19,6 +21,7 @@ spec:
     metadata:
       labels:
         {{- include "comments-api.selectorLabels" . | nindent 8 }}
+        app.kubernetes.io/component: api
       annotations:
         # forca rollout quando o ConfigMap muda
         checksum/config: {{ include (print $.Template.BasePath "/configmap.yaml") . | sha256sum }}
@@ -84,6 +87,16 @@ spec:
       volumes:
         - name: tmp
           emptyDir: {}
+      {{- if .Values.topologySpread.enabled }}
+      topologySpreadConstraints:
+        - maxSkew: {{ .Values.topologySpread.maxSkew }}
+          topologyKey: {{ .Values.topologySpread.topologyKey }}
+          whenUnsatisfiable: {{ .Values.topologySpread.whenUnsatisfiable }}
+          labelSelector:
+            matchLabels:
+              {{- include "comments-api.selectorLabels" . | nindent 14 }}
+              app.kubernetes.io/component: api
+      {{- end }}
       {{- with .Values.nodeSelector }}
       nodeSelector:
         {{- toYaml . | nindent 8 }}

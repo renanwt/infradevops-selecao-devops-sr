@@ -78,3 +78,27 @@ serviceAccount:
 podAnnotations: {}
 nodeSelector: {}
 tolerations: []
+
+# --- resiliencia ---
+autoscaling:
+  enabled: true
+  minReplicas: 2
+  maxReplicas: 5
+  targetCPUUtilizationPercentage: 60
+  scaleDownStabilizationSeconds: 300
+
+podDisruptionBudget:
+  enabled: true
+  minAvailable: 1
+
+# Espalha pods entre AZs; ScheduleAnyway evita Pending se uma AZ ficar sem no
+topologySpread:
+  enabled: true
+  maxSkew: 1
+  topologyKey: topology.kubernetes.io/zone
+  whenUnsatisfiable: ScheduleAnyway
+
+networkPolicy:
+  enabled: true
+  vpcCidr: 10.0.0.0/16
+  monitoringNamespace: monitoring

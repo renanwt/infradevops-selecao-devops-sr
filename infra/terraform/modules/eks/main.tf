@@ -51,6 +51,8 @@ module "eks" {
       most_recent    = true
       before_compute = true # precisa existir antes dos nos p/ max-pods correto
       configuration_values = jsonencode({
+        # sem isso, NetworkPolicy e aceita mas nao aplicada
+        enableNetworkPolicy = "true"
         env = {
           ENABLE_PREFIX_DELEGATION = "true"
           WARM_PREFIX_TARGET       = "1"

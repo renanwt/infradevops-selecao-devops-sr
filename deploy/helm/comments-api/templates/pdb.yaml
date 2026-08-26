@@ -1,0 +1,15 @@
+{{- if .Values.podDisruptionBudget.enabled }}
+# Garante ao menos N pods durante drenagem de no / upgrade do cluster.
+apiVersion: policy/v1
+kind: PodDisruptionBudget
+metadata:
+  name: {{ include "comments-api.fullname" . }}
+  labels:
+    {{- include "comments-api.labels" . | nindent 4 }}
+spec:
+  minAvailable: {{ .Values.podDisruptionBudget.minAvailable }}
+  selector:
+    matchLabels:
+      {{- include "comments-api.selectorLabels" . | nindent 6 }}
+      app.kubernetes.io/component: api
+{{- end }}
