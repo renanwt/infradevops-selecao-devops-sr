@@ -98,7 +98,7 @@ jobs:
 
       # Valida os manifests contra os schemas da versao do cluster.
       # CRDs (ExternalSecret) vem do catalogo da datree.
-      - uses: yokawasa/action-setup-kube-tools@v0.11.2
+      - uses: yokawasa/action-setup-kube-tools@v0.14.0
         with:
           kubeconform: "0.6.7"
 
@@ -167,7 +167,7 @@ jobs:
 
       # --- Trivy: vulnerabilidades da imagem (falha em HIGH/CRITICAL corrigiveis) ---
       - name: trivy image (sarif)
-        uses: aquasecurity/trivy-action@0.28.0
+        uses: aquasecurity/trivy-action@v0.36.0
         with:
           input: /tmp/image.tar
           format: sarif
@@ -183,7 +183,7 @@ jobs:
           category: trivy-image
 
       - name: trivy image (gate)
-        uses: aquasecurity/trivy-action@0.28.0
+        uses: aquasecurity/trivy-action@v0.36.0
         with:
           input: /tmp/image.tar
           format: table
@@ -193,7 +193,7 @@ jobs:
 
       # --- Trivy: misconfig em Dockerfile, Terraform e Helm ---
       - name: trivy config (gate)
-        uses: aquasecurity/trivy-action@0.28.0
+        uses: aquasecurity/trivy-action@v0.36.0
         with:
           scan-type: config
           scan-ref: .
