@@ -112,6 +112,12 @@ variable "app_namespace" {
   default = "comments"
 }
 
+variable "github_actions_can_apply" {
+  description = "true = pipeline pode rodar terraform apply (AdministratorAccess na role do CI)."
+  type        = bool
+  default     = false
+}
+
 # --- custo ------------------------------------------------------------------
 variable "budget_limit_usd" {
   description = "Limite mensal do AWS Budget."

@@ -71,4 +71,6 @@ module "iam" {
   tfstate_bucket     = var.tfstate_bucket
   github_repository  = var.github_repository
   app_namespace      = var.app_namespace
+
+  github_actions_can_apply = var.github_actions_can_apply
 }

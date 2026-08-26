@@ -1,0 +1,134 @@
+name: infra
+
+# Terraform: fmt/validate/plan em PR; apply somente manual e com aprovacao.
+# Credenciais via OIDC (role comments-api-dev-github-actions), sem chaves.
+
+on:
+  pull_request:
+    paths:
+      - "infra/terraform/**"
+      - ".github/workflows/infra.yml"
+  workflow_dispatch:
+    inputs:
+      action:
+        description: "plan ou apply"
+        type: choice
+        options: [plan, apply]
+        default: plan
+      stack:
+        description: "Stack Terraform"
+        type: choice
+        options: [00-foundation]
+        default: 00-foundation
+
+permissions:
+  contents: read
+  id-token: write # OIDC
+
+env:
+  AWS_REGION: us-east-1
+  TF_VERSION: "1.15.8"
+  TF_IN_AUTOMATION: "true"
+  TF_INPUT: "false"
+
+concurrency:
+  group: infra-${{ github.event.inputs.stack || '00-foundation' }}
+  cancel-in-progress: false # nunca cancelar um apply no meio
+
+jobs:
+  plan:
+    name: plan (${{ github.event.inputs.stack || '00-foundation' }})
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: infra/terraform/${{ github.event.inputs.stack || '00-foundation' }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: hashicorp/setup-terraform@v3
+        with:
+          terraform_version: ${{ env.TF_VERSION }}
+          terraform_wrapper: false
+
+      - name: fmt
+        run: terraform fmt -check -recursive -diff ..
+
+      - uses: aws-actions/configure-aws-credentials@v4
+        with:
+          role-to-assume: ${{ vars.AWS_ROLE_ARN }}
+          aws-region: ${{ env.AWS_REGION }}
+
+      - name: init
+        run: terraform init -no-color
+
+      - name: validate
+        run: terraform validate -no-color
+
+      - name: plan
+        id: plan
+        run: |
+          terraform plan -no-color -out=tfplan -detailed-exitcode 2>&1 | tee plan.txt
+          echo "exitcode=${PIPESTATUS[0]}" >> "$GITHUB_OUTPUT"
+        continue-on-error: true
+
+      - name: resumo
+        run: |
+          {
+            echo "### terraform plan — \`${{ github.event.inputs.stack || '00-foundation' }}\`"
+            echo
+            grep -E '^(Plan:|No changes)' plan.txt || echo "_ver log_"
+            echo
+            echo "<details><summary>plan completo</summary>"
+            echo
+            echo '```'
+            tail -c 60000 plan.txt
+            echo '```'
+            echo "</details>"
+          } >> "$GITHUB_STEP_SUMMARY"
+
+      # 0 = sem mudancas, 2 = com mudancas, 1 = erro
+      - name: falha se o plan deu erro
+        if: steps.plan.outputs.exitcode == '1'
+        run: exit 1
+
+      - uses: actions/upload-artifact@v4
+        if: steps.plan.outputs.exitcode == '2'
+        with:
+          name: tfplan-${{ github.event.inputs.stack || '00-foundation' }}-${{ github.run_id }}
+          path: infra/terraform/${{ github.event.inputs.stack || '00-foundation' }}/tfplan
+          retention-days: 1
+
+  apply:
+    name: apply (${{ github.event.inputs.stack }})
+    needs: plan
+    if: github.event_name == 'workflow_dispatch' && github.event.inputs.action == 'apply'
+    runs-on: ubuntu-latest
+    # Environment com "required reviewers" no GitHub: o job pausa ate aprovacao.
+    environment: infra-apply
+    defaults:
+      run:
+        working-directory: infra/terraform/${{ github.event.inputs.stack }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: hashicorp/setup-terraform@v3
+        with:
+          terraform_version: ${{ env.TF_VERSION }}
+          terraform_wrapper: false
+
+      - uses: aws-actions/configure-aws-credentials@v4
+        with:
+          role-to-assume: ${{ vars.AWS_ROLE_ARN }}
+          aws-region: ${{ env.AWS_REGION }}
+
+      - name: init
+        run: terraform init -no-color
+
+      - uses: actions/download-artifact@v4
+        with:
+          name: tfplan-${{ github.event.inputs.stack }}-${{ github.run_id }}
+          path: infra/terraform/${{ github.event.inputs.stack }}
+
+      # Aplica exatamente o plan revisado, nao um plan novo.
+      - name: apply
+        run: terraform apply -no-color tfplan

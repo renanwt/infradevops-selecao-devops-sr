@@ -41,6 +41,12 @@ variable "app_namespace" {
   default     = "comments"
 }
 
+variable "github_actions_can_apply" {
+  description = "Anexa AdministratorAccess a role do CI para terraform apply via pipeline."
+  type        = bool
+  default     = false
+}
+
 variable "tags" {
   type    = map(string)
   default = {}

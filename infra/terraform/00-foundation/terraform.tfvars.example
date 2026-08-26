@@ -28,6 +28,7 @@ db_skip_final_snapshot   = true  # producao: false
 github_repository = "renanwt/infradevops-selecao-devops-sr"
 tfstate_bucket    = "comments-api-tfstate-208597681536"
 app_namespace     = "comments"
+github_actions_can_apply = false # true = apply pelo pipeline (AdministratorAccess)
 
 # --- custo ---
 budget_limit_usd = 15

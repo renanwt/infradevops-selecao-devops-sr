@@ -101,11 +101,15 @@ data "aws_iam_policy_document" "github_trust" {
       values   = ["sts.amazonaws.com"]
     }
 
-    # Apenas este repositorio, apenas a branch main.
+    # Apenas este repositorio: branch main (deploy/apply) e pull requests (plan).
     condition {
       test     = "StringLike"
       variable = "token.actions.githubusercontent.com:sub"
-      values   = ["repo:${var.github_repository}:ref:refs/heads/main"]
+      values = [
+        "repo:${var.github_repository}:ref:refs/heads/main",
+        "repo:${var.github_repository}:pull_request",
+        "repo:${var.github_repository}:environment:infra-apply",
+      ]
     }
   }
 }
@@ -182,6 +186,14 @@ resource "aws_iam_role_policy_attachment" "github_actions" {
 resource "aws_iam_role_policy_attachment" "github_actions_readonly" {
   role       = aws_iam_role.github_actions.name
   policy_arn = "arn:aws:iam::aws:policy/ReadOnlyAccess"
+}
+
+# Opcional: permite `terraform apply` pelo pipeline. Desligado por padrao -
+# a role fica somente-leitura + ECR/EKS e o apply e feito pelo operador.
+resource "aws_iam_role_policy_attachment" "github_actions_apply" {
+  count      = var.github_actions_can_apply ? 1 : 0
+  role       = aws_iam_role.github_actions.name
+  policy_arn = "arn:aws:iam::aws:policy/AdministratorAccess"
 }
 
 # Acesso ao cluster para `helm upgrade`. Escopo: namespace da aplicacao.
