@@ -52,3 +52,18 @@ def test_migracao_upgrade_downgrade() -> None:
         )
     finally:
         engine.dispose()
+
+
+@pytest.mark.integration
+def test_migracao_com_senha_url_encoded(monkeypatch: pytest.MonkeyPatch) -> None:
+    """Senha gerenciada pelo RDS pode ter %XX apos urlquery; o configparser do
+    Alembic interpretaria como interpolacao. "%73" decodifica para "s"."""
+    from app.core.config import get_settings
+
+    url = get_settings().database_url.replace(":comments@", ":comment%73@")
+    monkeypatch.setenv("DATABASE_URL", url)
+    get_settings.cache_clear()
+    try:
+        command.current(Config("app/alembic.ini"))
+    finally:
+        get_settings.cache_clear()
