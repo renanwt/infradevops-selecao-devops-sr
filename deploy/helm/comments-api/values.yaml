@@ -33,6 +33,10 @@ ingress:
   className: alb
   host: ""           # vazio = responde por qualquer host (usa o DNS do ALB)
   annotations:
+    # IngressGroup: um unico ALB compartilhado por Ingresses de varios namespaces
+    # (Grafana em /grafana entra no mesmo grupo). Sem custo de um 2o ALB.
+    alb.ingress.kubernetes.io/group.name: comments-api
+    alb.ingress.kubernetes.io/group.order: "100"
     alb.ingress.kubernetes.io/scheme: internet-facing
     alb.ingress.kubernetes.io/target-type: ip
     alb.ingress.kubernetes.io/healthcheck-path: /health
