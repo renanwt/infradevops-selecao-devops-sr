@@ -59,6 +59,10 @@ spec:
       labels:
         {{- toYaml $labels | nindent 8 }}
         app.kubernetes.io/component: postgres-exporter
+      annotations:
+        # O Secret e materializado pelo ESO (fora do Helm): mudar host/db ou o
+        # formato do DSN precisa forcar rollout, senao o pod segue com o env antigo.
+        checksum/dsn: {{ print .Values.database.host .Values.database.port .Values.database.name "uri-user-pass-v2" | sha256sum }}
     spec:
       automountServiceAccountToken: false
       securityContext:

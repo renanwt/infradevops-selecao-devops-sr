@@ -11,7 +11,7 @@ Variáveis: `namespace`, `route`. Datasource: `prometheus` (uid padrão do kube-
 ## Acesso
 
 ```sh
-kubectl -n monitoring port-forward svc/kps-grafana 3000:80
+kubectl -n monitoring port-forward svc/kube-prometheus-stack-grafana 3000:80
 kubectl -n monitoring get secret grafana-admin -o jsonpath='{.data.admin-password}' | base64 -d
 # http://localhost:3000  (admin)
 ```
