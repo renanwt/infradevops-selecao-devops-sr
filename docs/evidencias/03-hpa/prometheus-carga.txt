@@ -1,0 +1,23 @@
+# Visao do Prometheus durante a carga (03:08–03:20 UTC), passo 60s — 2026-08-27T03:18:08Z
+
+RPS                          0 0 0 146.414 283.633 287.2 294.233 80.567 0 0
+p95 (s)                      nan nan nan 0.481 0.444 0.488 0.676 0.269 nan nan
+p50 (s)                      nan nan nan 0.159 0.114 0.183 0.208 0.024 nan nan
+taxa 5xx                     nan nan nan nan 0 0 0 0 0 0 0 0 0
+replicas HPA                 2 2 2 2 5 5 5 5 5 5 5 5 5
+CPU total pods api (cores)   0.004 0.004 0.098 0.216 2.727 3.265 3.446 3.368 0.891 0.01 0.009
+pool in_use (soma)           0 0 0 0 32 38 49 46 0 0 0 0 0
+RDS numbackends              5 5 6 4 30 39 44 48 27 27 27 27 27
+
+(colunas = minutos a partir de 03:08Z; k6 rodou 03:10–03:15)
+
+# Alertas (serie ALERTS) durante a carga, passo 60s
+  CommentsApiDbPoolExhausted   pending  minutos ativos: 3
+  CommentsApiDbPoolExhausted   pending  minutos ativos: 4
+  CommentsApiDbPoolExhausted   pending  minutos ativos: 3
+  CommentsApiDbPoolExhausted   pending  minutos ativos: 3
+  CommentsApiHighLatencyP95    pending  minutos ativos: 11
+  CommentsApiHpaAtMax          pending  minutos ativos: 10
+
+# Leitura: pool in_use chegou a 49/50 (5 pods x 10) e CPU total ~3,4 cores (nos t3.small = 4 vCPU):
+#  o gargalo no pico foi capacidade de no + pool, nao o HPA (que atingiu o maximo em ~1 min).

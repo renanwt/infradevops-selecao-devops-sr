@@ -1,0 +1,211 @@
+# HPA sob carga (k6 in-cluster) — 2026-08-27T03:10:22Z
+# amostras a cada 20s: kubectl get hpa + numero de pods Ready + kubectl top pods
+
+--- 03:10:22Z
+comments-api   Deployment/comments-api   cpu: 2%/60%   2     5     2     3h40m
+pods api Ready: 2  (total: 2)
+  comments-api-9b9b5c587-8j872 cpu=2m mem=61Mi
+  comments-api-9b9b5c587-rxr7z cpu=2m mem=63Mi
+03:10:28Z aplicando Job k6
+job.batch/k6-load created
+--- 03:10:51Z
+comments-api   Deployment/comments-api   cpu: 7%/60%   2     5     2     3h41m
+pods api Ready: 2  (total: 2)
+  comments-api-9b9b5c587-8j872 cpu=431m mem=64Mi
+  comments-api-9b9b5c587-rxr7z cpu=137m mem=64Mi
+--- 03:11:18Z
+comments-api   Deployment/comments-api   cpu: 482%/60%   2     5     4     3h41m
+pods api Ready: 5  (total: 5)
+  comments-api-9b9b5c587-7gmbq cpu=203m mem=65Mi
+  comments-api-9b9b5c587-8j872 cpu=431m mem=64Mi
+  comments-api-9b9b5c587-d9cnn cpu=339m mem=67Mi
+  comments-api-9b9b5c587-rxr7z cpu=533m mem=67Mi
+--- 03:11:44Z
+comments-api   Deployment/comments-api   cpu: 624%/60%   2     5     5     3h41m
+pods api Ready: 5  (total: 5)
+  comments-api-9b9b5c587-7gmbq cpu=31m mem=64Mi
+  comments-api-9b9b5c587-8j872 cpu=919m mem=70Mi
+  comments-api-9b9b5c587-d9cnn cpu=731m mem=67Mi
+  comments-api-9b9b5c587-rxr7z cpu=756m mem=70Mi
+  comments-api-9b9b5c587-sctbp cpu=92m mem=62Mi
+--- 03:12:11Z
+comments-api   Deployment/comments-api   cpu: 598%/60%   2     5     5     3h42m
+pods api Ready: 5  (total: 5)
+  comments-api-9b9b5c587-7gmbq cpu=448m mem=68Mi
+  comments-api-9b9b5c587-8j872 cpu=935m mem=73Mi
+  comments-api-9b9b5c587-d9cnn cpu=732m mem=67Mi
+  comments-api-9b9b5c587-rxr7z cpu=777m mem=73Mi
+  comments-api-9b9b5c587-sctbp cpu=101m mem=62Mi
+--- 03:12:38Z
+comments-api   Deployment/comments-api   cpu: 675%/60%   2     5     5     3h42m
+pods api Ready: 5  (total: 5)
+  comments-api-9b9b5c587-7gmbq cpu=817m mem=70Mi
+  comments-api-9b9b5c587-8j872 cpu=920m mem=75Mi
+  comments-api-9b9b5c587-d9cnn cpu=594m mem=67Mi
+  comments-api-9b9b5c587-rxr7z cpu=779m mem=75Mi
+  comments-api-9b9b5c587-sctbp cpu=301m mem=64Mi
+--- 03:13:04Z
+comments-api   Deployment/comments-api   cpu: 688%/60%   2     5     5     3h43m
+pods api Ready: 5  (total: 5)
+  comments-api-9b9b5c587-7gmbq cpu=804m mem=69Mi
+  comments-api-9b9b5c587-8j872 cpu=922m mem=76Mi
+  comments-api-9b9b5c587-d9cnn cpu=606m mem=68Mi
+  comments-api-9b9b5c587-rxr7z cpu=740m mem=76Mi
+  comments-api-9b9b5c587-sctbp cpu=371m mem=66Mi
+--- 03:13:31Z
+comments-api   Deployment/comments-api   cpu: 656%/60%   2     5     5     3h43m
+pods api Ready: 5  (total: 5)
+  comments-api-9b9b5c587-7gmbq cpu=665m mem=67Mi
+  comments-api-9b9b5c587-8j872 cpu=922m mem=76Mi
+  comments-api-9b9b5c587-d9cnn cpu=609m mem=70Mi
+  comments-api-9b9b5c587-rxr7z cpu=643m mem=77Mi
+  comments-api-9b9b5c587-sctbp cpu=443m mem=66Mi
+--- 03:13:57Z
+comments-api   Deployment/comments-api   cpu: 686%/60%   2     5     5     3h44m
+pods api Ready: 5  (total: 5)
+  comments-api-9b9b5c587-7gmbq cpu=834m mem=68Mi
+  comments-api-9b9b5c587-8j872 cpu=935m mem=76Mi
+  comments-api-9b9b5c587-d9cnn cpu=606m mem=73Mi
+  comments-api-9b9b5c587-rxr7z cpu=600m mem=77Mi
+  comments-api-9b9b5c587-sctbp cpu=458m mem=67Mi
+--- 03:14:24Z
+comments-api   Deployment/comments-api   cpu: 689%/60%   2     5     5     3h44m
+pods api Ready: 5  (total: 5)
+  comments-api-9b9b5c587-7gmbq cpu=859m mem=68Mi
+  comments-api-9b9b5c587-8j872 cpu=932m mem=77Mi
+  comments-api-9b9b5c587-d9cnn cpu=606m mem=73Mi
+  comments-api-9b9b5c587-rxr7z cpu=587m mem=77Mi
+  comments-api-9b9b5c587-sctbp cpu=492m mem=67Mi
+--- 03:14:51Z
+comments-api   Deployment/comments-api   cpu: 679%/60%   2     5     5     3h45m
+pods api Ready: 5  (total: 5)
+  comments-api-9b9b5c587-7gmbq cpu=851m mem=68Mi
+  comments-api-9b9b5c587-8j872 cpu=871m mem=77Mi
+  comments-api-9b9b5c587-d9cnn cpu=593m mem=74Mi
+  comments-api-9b9b5c587-rxr7z cpu=593m mem=78Mi
+  comments-api-9b9b5c587-sctbp cpu=429m mem=68Mi
+--- 03:15:18Z
+comments-api   Deployment/comments-api   cpu: 645%/60%   2     5     5     3h45m
+pods api Ready: 5  (total: 5)
+  comments-api-9b9b5c587-7gmbq cpu=771m mem=68Mi
+  comments-api-9b9b5c587-8j872 cpu=906m mem=77Mi
+  comments-api-9b9b5c587-d9cnn cpu=618m mem=74Mi
+  comments-api-9b9b5c587-rxr7z cpu=766m mem=78Mi
+  comments-api-9b9b5c587-sctbp cpu=167m mem=68Mi
+--- 03:15:44Z
+comments-api   Deployment/comments-api   cpu: 196%/60%   2     5     5     3h45m
+pods api Ready: 5  (total: 5)
+  comments-api-9b9b5c587-7gmbq cpu=2m mem=68Mi
+  comments-api-9b9b5c587-8j872 cpu=210m mem=76Mi
+  comments-api-9b9b5c587-d9cnn cpu=2m mem=74Mi
+  comments-api-9b9b5c587-rxr7z cpu=767m mem=77Mi
+  comments-api-9b9b5c587-sctbp cpu=2m mem=68Mi
+03:15:51Z job k6 terminou (status: succeeded= failed=1)
+03:15:54Z pico de replicas observado durante a carga: 5
+--- 03:16:26Z
+comments-api   Deployment/comments-api   cpu: 2%/60%   2     5     5     3h46m
+pods api Ready: 5  (total: 5)
+  comments-api-9b9b5c587-7gmbq cpu=3m mem=68Mi
+  comments-api-9b9b5c587-8j872 cpu=3m mem=76Mi
+  comments-api-9b9b5c587-d9cnn cpu=3m mem=74Mi
+  comments-api-9b9b5c587-rxr7z cpu=2m mem=77Mi
+  comments-api-9b9b5c587-sctbp cpu=3m mem=68Mi
+--- 03:17:03Z
+comments-api   Deployment/comments-api   cpu: 2%/60%   2     5     5     3h47m
+pods api Ready: 5  (total: 5)
+  comments-api-9b9b5c587-7gmbq cpu=3m mem=68Mi
+  comments-api-9b9b5c587-8j872 cpu=3m mem=76Mi
+  comments-api-9b9b5c587-d9cnn cpu=2m mem=74Mi
+  comments-api-9b9b5c587-rxr7z cpu=3m mem=77Mi
+  comments-api-9b9b5c587-sctbp cpu=3m mem=68Mi
+--- 03:17:40Z
+comments-api   Deployment/comments-api   cpu: 2%/60%   2     5     5     3h47m
+pods api Ready: 5  (total: 5)
+  comments-api-9b9b5c587-7gmbq cpu=3m mem=68Mi
+  comments-api-9b9b5c587-8j872 cpu=3m mem=76Mi
+  comments-api-9b9b5c587-d9cnn cpu=2m mem=74Mi
+  comments-api-9b9b5c587-rxr7z cpu=2m mem=77Mi
+  comments-api-9b9b5c587-sctbp cpu=2m mem=68Mi
+--- 03:18:17Z
+comments-api   Deployment/comments-api   cpu: 2%/60%   2     5     5     3h48m
+pods api Ready: 5  (total: 5)
+  comments-api-9b9b5c587-7gmbq cpu=2m mem=68Mi
+  comments-api-9b9b5c587-8j872 cpu=3m mem=76Mi
+  comments-api-9b9b5c587-d9cnn cpu=3m mem=74Mi
+  comments-api-9b9b5c587-rxr7z cpu=3m mem=77Mi
+  comments-api-9b9b5c587-sctbp cpu=3m mem=68Mi
+--- 03:18:55Z
+comments-api   Deployment/comments-api   cpu: 2%/60%   2     5     5     3h49m
+pods api Ready: 5  (total: 5)
+  comments-api-9b9b5c587-7gmbq cpu=3m mem=68Mi
+  comments-api-9b9b5c587-8j872 cpu=2m mem=76Mi
+  comments-api-9b9b5c587-d9cnn cpu=3m mem=74Mi
+  comments-api-9b9b5c587-rxr7z cpu=2m mem=77Mi
+  comments-api-9b9b5c587-sctbp cpu=2m mem=68Mi
+--- 03:19:32Z
+comments-api   Deployment/comments-api   cpu: 2%/60%   2     5     5     3h49m
+pods api Ready: 5  (total: 5)
+  comments-api-9b9b5c587-7gmbq cpu=2m mem=68Mi
+  comments-api-9b9b5c587-8j872 cpu=3m mem=76Mi
+  comments-api-9b9b5c587-d9cnn cpu=3m mem=74Mi
+  comments-api-9b9b5c587-rxr7z cpu=2m mem=77Mi
+  comments-api-9b9b5c587-sctbp cpu=2m mem=68Mi
+--- 03:20:09Z
+comments-api   Deployment/comments-api   cpu: 2%/60%   2     5     5     3h50m
+pods api Ready: 5  (total: 5)
+  comments-api-9b9b5c587-7gmbq cpu=2m mem=68Mi
+  comments-api-9b9b5c587-8j872 cpu=3m mem=76Mi
+  comments-api-9b9b5c587-d9cnn cpu=2m mem=74Mi
+  comments-api-9b9b5c587-rxr7z cpu=3m mem=77Mi
+  comments-api-9b9b5c587-sctbp cpu=2m mem=68Mi
+--- 03:20:46Z
+comments-api   Deployment/comments-api   cpu: 2%/60%   2     5     5     3h50m
+pods api Ready: 4  (total: 4)
+  comments-api-9b9b5c587-7gmbq cpu=3m mem=68Mi
+  comments-api-9b9b5c587-8j872 cpu=3m mem=76Mi
+  comments-api-9b9b5c587-d9cnn cpu=2m mem=74Mi
+  comments-api-9b9b5c587-sctbp cpu=2m mem=68Mi
+--- 03:21:23Z
+comments-api   Deployment/comments-api   cpu: 2%/60%   2     5     4     3h51m
+pods api Ready: 4  (total: 4)
+  comments-api-9b9b5c587-7gmbq cpu=2m mem=68Mi
+  comments-api-9b9b5c587-8j872 cpu=2m mem=76Mi
+  comments-api-9b9b5c587-d9cnn cpu=3m mem=74Mi
+  comments-api-9b9b5c587-sctbp cpu=3m mem=68Mi
+--- 03:22:00Z
+comments-api   Deployment/comments-api   cpu: 2%/60%   2     5     3     3h52m
+pods api Ready: 3  (total: 3)
+  comments-api-9b9b5c587-8j872 cpu=3m mem=76Mi
+  comments-api-9b9b5c587-d9cnn cpu=2m mem=74Mi
+  comments-api-9b9b5c587-sctbp cpu=3m mem=68Mi
+--- 03:22:37Z
+comments-api   Deployment/comments-api   cpu: 2%/60%   2     5     3     3h52m
+pods api Ready: 3  (total: 3)
+  comments-api-9b9b5c587-8j872 cpu=3m mem=76Mi
+  comments-api-9b9b5c587-d9cnn cpu=2m mem=74Mi
+  comments-api-9b9b5c587-sctbp cpu=2m mem=68Mi
+--- 03:23:14Z
+comments-api   Deployment/comments-api   cpu: 3%/60%   2     5     2     3h53m
+pods api Ready: 2  (total: 2)
+  comments-api-9b9b5c587-8j872 cpu=3m mem=76Mi
+  comments-api-9b9b5c587-sctbp cpu=3m mem=68Mi
+--- 03:23:21Z
+comments-api   Deployment/comments-api   cpu: 3%/60%   2     5     2     3h53m
+pods api Ready: 2  (total: 2)
+  comments-api-9b9b5c587-8j872 cpu=3m mem=76Mi
+  comments-api-9b9b5c587-sctbp cpu=3m mem=68Mi
+03:23:26Z scale-down concluido: replicas=2 (+454s apos o fim da carga)
+
+## eventos do HPA
+Events:
+  Type     Reason                        Age                From                       Message
+  ----     ------                        ----               ----                       -------
+  Warning  FailedGetResourceMetric       34m (x2 over 34m)  horizontal-pod-autoscaler  failed to get cpu utilization: unable to get metrics for resource cpu: no metrics returned from resource metrics API
+  Warning  FailedComputeMetricsReplicas  34m (x2 over 34m)  horizontal-pod-autoscaler  invalid metrics (1 invalid out of 1), first error is: failed to get cpu resource metric value: failed to get cpu utilization: unable to get metrics for resource cpu: no metrics returned from resource metrics API
+  Warning  FailedGetResourceMetric       29m (x6 over 75m)  horizontal-pod-autoscaler  failed to get cpu utilization: did not receive metrics for targeted pods (pods might be unready)
+  Warning  FailedComputeMetricsReplicas  29m (x6 over 75m)  horizontal-pod-autoscaler  invalid metrics (1 invalid out of 1), first error is: failed to get cpu resource metric value: failed to get cpu utilization: did not receive metrics for targeted pods (pods might be unready)
+  Normal   SuccessfulRescale             12m                horizontal-pod-autoscaler  New size: 4; reason: cpu resource utilization (percentage of request) above target
+  Normal   SuccessfulRescale             12m                horizontal-pod-autoscaler  New size: 5; reason: cpu resource utilization (percentage of request) above target
+  Normal   SuccessfulRescale             2m45s              horizontal-pod-autoscaler  New size: 4; reason: All metrics below target
+  Normal   SuccessfulRescale             105s               horizontal-pod-autoscaler  New size: 3; reason: All metrics below target
+  Normal   SuccessfulRescale             45s                horizontal-pod-autoscaler  New size: 2; reason: All metrics below target

@@ -1,0 +1,83 @@
+# k6 — saida do Job (grafana/k6:2.2.0) — 2026-08-27T03:15:52Z
+# alvo: http://comments-api.comments.svc.cluster.local (Service interno)
+
+ramp   [  77% ] 116/120 VUs  3m49.9s/5m00.0s
+ramp   [  77% ] 116/120 VUs  3m50.9s/5m00.0s
+ramp   [  77% ] 117/120 VUs  3m51.9s/5m00.0s
+ramp   [  78% ] 117/120 VUs  3m52.9s/5m00.0s
+ramp   [  78% ] 117/120 VUs  3m53.9s/5m00.0s
+ramp   [  78% ] 118/120 VUs  3m54.9s/5m00.0s
+ramp   [  79% ] 118/120 VUs  3m55.9s/5m00.0s
+ramp   [  79% ] 118/120 VUs  3m56.9s/5m00.0s
+ramp   [  79% ] 119/120 VUs  3m57.9s/5m00.0s
+ramp   [  80% ] 119/120 VUs  3m58.9s/5m00.0s
+ramp   [  80% ] 119/120 VUs  3m59.9s/5m00.0s
+ramp   [  80% ] 119/120 VUs  4m00.9s/5m00.0s
+ramp   [  81% ] 117/120 VUs  4m01.9s/5m00.0s
+ramp   [  81% ] 115/120 VUs  4m02.9s/5m00.0s
+ramp   [  81% ] 114/120 VUs  4m03.9s/5m00.0s
+ramp   [  82% ] 111/120 VUs  4m04.9s/5m00.0s
+ramp   [  82% ] 109/120 VUs  4m05.9s/5m00.0s
+ramp   [  82% ] 107/120 VUs  4m06.9s/5m00.0s
+ramp   [  83% ] 106/120 VUs  4m07.9s/5m00.0s
+ramp   [  83% ] 106/120 VUs  4m08.9s/5m00.0s
+ramp   [  83% ] 101/120 VUs  4m09.9s/5m00.0s
+ramp   [  84% ] 099/120 VUs  4m10.9s/5m00.0s
+ramp   [  84% ] 097/120 VUs  4m11.9s/5m00.0s
+ramp   [  84% ] 095/120 VUs  4m12.9s/5m00.0s
+ramp   [  85% ] 093/120 VUs  4m13.9s/5m00.0s
+ramp   [  85% ] 092/120 VUs  4m14.9s/5m00.0s
+ramp   [  85% ] 089/120 VUs  4m15.9s/5m00.0s
+ramp   [  86% ] 087/120 VUs  4m16.9s/5m00.0s
+ramp   [  86% ] 085/120 VUs  4m17.9s/5m00.0s
+ramp   [  86% ] 083/120 VUs  4m18.9s/5m00.0s
+ramp   [  87% ] 081/120 VUs  4m19.9s/5m00.0s
+ramp   [  87% ] 079/120 VUs  4m20.9s/5m00.0s
+ramp   [  87% ] 077/120 VUs  4m21.9s/5m00.0s
+ramp   [  88% ] 075/120 VUs  4m22.9s/5m00.0s
+ramp   [  88% ] 073/120 VUs  4m23.9s/5m00.0s
+ramp   [  88% ] 072/120 VUs  4m24.9s/5m00.0s
+ramp   [  89% ] 069/120 VUs  4m25.9s/5m00.0s
+ramp   [  89% ] 067/120 VUs  4m26.9s/5m00.0s
+ramp   [  89% ] 066/120 VUs  4m27.9s/5m00.0s
+ramp   [  90% ] 063/120 VUs  4m28.9s/5m00.0s
+ramp   [  90% ] 061/120 VUs  4m29.9s/5m00.0s
+ramp   [  90% ] 059/120 VUs  4m30.9s/5m00.0s
+ramp   [  91% ] 057/120 VUs  4m31.9s/5m00.0s
+ramp   [  91% ] 055/120 VUs  4m32.9s/5m00.0s
+ramp   [  91% ] 053/120 VUs  4m33.9s/5m00.0s
+ramp   [  92% ] 051/120 VUs  4m34.9s/5m00.0s
+ramp   [  92% ] 049/120 VUs  4m35.9s/5m00.0s
+ramp   [  92% ] 047/120 VUs  4m36.9s/5m00.0s
+ramp   [  93% ] 045/120 VUs  4m37.9s/5m00.0s
+ramp   [  93% ] 043/120 VUs  4m38.9s/5m00.0s
+ramp   [  93% ] 041/120 VUs  4m39.9s/5m00.0s
+ramp   [  94% ] 039/120 VUs  4m40.9s/5m00.0s
+ramp   [  94% ] 037/120 VUs  4m41.9s/5m00.0s
+ramp   [  94% ] 035/120 VUs  4m42.9s/5m00.0s
+ramp   [  95% ] 033/120 VUs  4m43.9s/5m00.0s
+ramp   [  95% ] 031/120 VUs  4m44.9s/5m00.0s
+ramp   [  95% ] 029/120 VUs  4m45.9s/5m00.0s
+ramp   [  96% ] 027/120 VUs  4m46.9s/5m00.0s
+ramp   [  96% ] 025/120 VUs  4m47.9s/5m00.0s
+ramp   [  96% ] 023/120 VUs  4m48.9s/5m00.0s
+ramp   [  97% ] 021/120 VUs  4m49.9s/5m00.0s
+ramp   [  97% ] 019/120 VUs  4m50.9s/5m00.0s
+ramp   [  97% ] 017/120 VUs  4m51.9s/5m00.0s
+ramp   [  98% ] 015/120 VUs  4m52.9s/5m00.0s
+ramp   [  98% ] 013/120 VUs  4m53.9s/5m00.0s
+ramp   [  98% ] 011/120 VUs  4m54.9s/5m00.0s
+ramp   [  99% ] 009/120 VUs  4m55.9s/5m00.0s
+ramp   [  99% ] 007/120 VUs  4m56.9s/5m00.0s
+ramp   [  99% ] 005/120 VUs  4m57.9s/5m00.0s
+ramp   [ 100% ] 003/120 VUs  4m58.9s/5m00.0s
+ramp   [ 100% ] 001/120 VUs  4m59.9s/5m00.0s
+==== resumo k6 ====
+requisicoes: 69675  (232.2 req/s)
+falhas http: 0.000%   5xx: 0.000%
+latencia total  p50=167.9ms p95=520.8ms p99=n/ams
+GET list        p95=508.0ms
+POST new        p95=615.5ms
+thresholds: http_req_failed=OK, http_req_duration=FALHOU, errors_5xx=OK
+ramp ✓ [ 100% ] 000/120 VUs  5m0s
+time="2026-08-27T03:15:34Z" level=error msg="thresholds on metrics 'http_req_duration' have been crossed"

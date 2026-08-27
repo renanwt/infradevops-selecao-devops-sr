@@ -1,0 +1,63 @@
+# Job k6 dentro do cluster (namespace comments, PSS restricted).
+# Alvo: Service interno da API (nao passa pelo ALB -> mede a app, nao a borda).
+#
+#   kubectl -n comments create configmap k6-script --from-file=ops/load/k6-load.js --dry-run=client -o yaml | kubectl apply -f -
+#   kubectl -n comments apply -f ops/load/k6-job.yaml
+#   kubectl -n comments get hpa comments-api -w          # em outro terminal
+#   kubectl -n comments logs -f job/k6-load
+#   kubectl -n comments delete job k6-load configmap/k6-script
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: k6-load
+  namespace: comments
+  labels:
+    app.kubernetes.io/name: k6-load
+spec:
+  backoffLimit: 0
+  ttlSecondsAfterFinished: 3600
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/name: k6-load
+    spec:
+      restartPolicy: Never
+      automountServiceAccountToken: false
+      securityContext:
+        runAsNonRoot: true
+        runAsUser: 12345
+        runAsGroup: 12345
+        seccompProfile:
+          type: RuntimeDefault
+      containers:
+        - name: k6
+          image: grafana/k6:2.2.0
+          args: ["run", "/scripts/k6-load.js"]
+          env:
+            - name: BASE_URL
+              value: http://comments-api.comments.svc.cluster.local
+            - name: K6_NO_USAGE_REPORT
+              value: "true"
+          securityContext:
+            allowPrivilegeEscalation: false
+            readOnlyRootFilesystem: true
+            capabilities:
+              drop: ["ALL"]
+          resources:
+            requests:
+              cpu: 200m
+              memory: 128Mi
+            limits:
+              memory: 512Mi
+          volumeMounts:
+            - name: script
+              mountPath: /scripts
+              readOnly: true
+            - name: tmp
+              mountPath: /tmp
+      volumes:
+        - name: script
+          configMap:
+            name: k6-script
+        - name: tmp
+          emptyDir: {}
