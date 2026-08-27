@@ -1,8 +1,6 @@
-# Comments API — desafio DevOps Sr (AWS · EKS · FastAPI · RDS)
+# Comments API (AWS · EKS · FastAPI · RDS)
 
 API REST de comentários com persistência em RDS PostgreSQL, rodando em EKS, provisionada por Terraform, entregue por GitHub Actions (build → scan → package → deploy) e observada por Prometheus/Grafana com SLOs formais.
-
-> Enunciado original: [docs/desafio.md](docs/desafio.md) · Decisões, experimentos e testes: [COMMENTS.md](COMMENTS.md) · Evidências: [docs/evidencias/](docs/evidencias/)
 
 ## Arquitetura
 
