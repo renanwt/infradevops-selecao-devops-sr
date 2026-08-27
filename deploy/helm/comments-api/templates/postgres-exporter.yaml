@@ -1,0 +1,170 @@
+{{- if .Values.postgresExporter.enabled }}
+{{- $name := printf "%s-postgres-exporter" (include "comments-api.fullname" .) -}}
+{{- $labels := dict "app.kubernetes.io/name" "postgres-exporter" "app.kubernetes.io/instance" .Release.Name -}}
+# ---------------------------------------------------------------------------
+# postgres_exporter apontando para o RDS: conexoes (numbackends), commits,
+# locks, tamanho do banco - a visao "do lado do servidor".
+# Credencial: mesmo secret gerenciado do RDS via ESO (evolucao: usuario
+# dedicado com role pg_monitor).
+# ---------------------------------------------------------------------------
+apiVersion: external-secrets.io/v1
+kind: ExternalSecret
+metadata:
+  name: {{ $name }}
+  namespace: {{ .Release.Namespace }}
+  labels:
+    {{- include "comments-api.labels" . | nindent 4 }}
+    app.kubernetes.io/component: postgres-exporter
+spec:
+  refreshInterval: {{ .Values.externalSecret.refreshInterval }}
+  secretStoreRef:
+    kind: ClusterSecretStore
+    name: {{ .Values.externalSecret.storeName }}
+  target:
+    name: {{ $name }}
+    creationPolicy: Owner
+    template:
+      engineVersion: v2
+      data:
+        DATA_SOURCE_NAME: "postgresql://{{ printf "{{ .username }}" }}:{{ printf "{{ .password }}" }}@{{ .Values.database.host }}:{{ .Values.database.port }}/{{ .Values.database.name }}?sslmode=require"
+  data:
+    - secretKey: username
+      remoteRef:
+        key: {{ .Values.database.secretArn | quote }}
+        property: username
+    - secretKey: password
+      remoteRef:
+        key: {{ .Values.database.secretArn | quote }}
+        property: password
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ $name }}
+  namespace: {{ .Release.Namespace }}
+  labels:
+    {{- include "comments-api.labels" . | nindent 4 }}
+    app.kubernetes.io/component: postgres-exporter
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      {{- toYaml $labels | nindent 6 }}
+  template:
+    metadata:
+      labels:
+        {{- toYaml $labels | nindent 8 }}
+        app.kubernetes.io/component: postgres-exporter
+    spec:
+      automountServiceAccountToken: false
+      securityContext:
+        runAsNonRoot: true
+        runAsUser: 65534
+        runAsGroup: 65534
+        seccompProfile:
+          type: RuntimeDefault
+      containers:
+        - name: exporter
+          image: {{ .Values.postgresExporter.image.repository }}:{{ .Values.postgresExporter.image.tag }}
+          args:
+            - --web.listen-address=:9187
+            - --collector.database
+            - --collector.stat_database
+          ports:
+            - name: metrics
+              containerPort: 9187
+          envFrom:
+            - secretRef:
+                name: {{ $name }}
+          securityContext:
+            allowPrivilegeEscalation: false
+            readOnlyRootFilesystem: true
+            capabilities:
+              drop: ["ALL"]
+          resources:
+            {{- toYaml .Values.postgresExporter.resources | nindent 12 }}
+          livenessProbe:
+            httpGet:
+              path: /
+              port: metrics
+          readinessProbe:
+            httpGet:
+              path: /
+              port: metrics
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{ $name }}
+  namespace: {{ .Release.Namespace }}
+  labels:
+    {{- include "comments-api.labels" . | nindent 4 }}
+    app.kubernetes.io/component: postgres-exporter
+spec:
+  type: ClusterIP
+  ports:
+    - name: metrics
+      port: 9187
+      targetPort: metrics
+  selector:
+    {{- toYaml $labels | nindent 4 }}
+---
+apiVersion: monitoring.coreos.com/v1
+kind: ServiceMonitor
+metadata:
+  name: {{ $name }}
+  namespace: {{ .Release.Namespace }}
+  labels:
+    {{- include "comments-api.labels" . | nindent 4 }}
+    app.kubernetes.io/component: postgres-exporter
+spec:
+  selector:
+    matchLabels:
+      {{- toYaml $labels | nindent 6 }}
+  endpoints:
+    - port: metrics
+      interval: {{ .Values.metrics.serviceMonitor.interval }}
+---
+{{- if .Values.networkPolicy.enabled }}
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: {{ $name }}
+  namespace: {{ .Release.Namespace }}
+  labels:
+    {{- include "comments-api.labels" . | nindent 4 }}
+    app.kubernetes.io/component: postgres-exporter
+spec:
+  podSelector:
+    matchLabels:
+      {{- toYaml $labels | nindent 6 }}
+  policyTypes: [Ingress, Egress]
+  ingress:
+    - from:
+        - namespaceSelector:
+            matchLabels:
+              kubernetes.io/metadata.name: {{ .Values.networkPolicy.monitoringNamespace }}
+      ports:
+        - protocol: TCP
+          port: 9187
+  egress:
+    - to:
+        - namespaceSelector:
+            matchLabels:
+              kubernetes.io/metadata.name: kube-system
+          podSelector:
+            matchLabels:
+              k8s-app: kube-dns
+      ports:
+        - protocol: UDP
+          port: 53
+        - protocol: TCP
+          port: 53
+    - to:
+        - ipBlock:
+            cidr: {{ .Values.networkPolicy.vpcCidr }}
+      ports:
+        - protocol: TCP
+          port: 5432
+{{- end }}
+{{- end }}

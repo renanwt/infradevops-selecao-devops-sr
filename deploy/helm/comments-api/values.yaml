@@ -102,3 +102,22 @@ networkPolicy:
   enabled: true
   vpcCidr: 10.0.0.0/16
   monitoringNamespace: monitoring
+
+# --- observabilidade ---
+metrics:
+  serviceMonitor:
+    enabled: true
+    interval: 30s
+
+# Metricas do RDS "do lado do servidor" (conexoes, commits, locks)
+postgresExporter:
+  enabled: true
+  image:
+    repository: quay.io/prometheuscommunity/postgres-exporter
+    tag: v0.20.1
+  resources:
+    requests:
+      cpu: 10m
+      memory: 32Mi
+    limits:
+      memory: 64Mi

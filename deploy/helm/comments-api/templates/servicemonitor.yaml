@@ -1,0 +1,20 @@
+{{- if .Values.metrics.serviceMonitor.enabled }}
+# Prometheus Operator descobre este objeto e passa a coletar /metrics dos pods
+# da API (via Service). Requer *SelectorNilUsesHelmValues=false no stack.
+apiVersion: monitoring.coreos.com/v1
+kind: ServiceMonitor
+metadata:
+  name: {{ include "comments-api.fullname" . }}
+  namespace: {{ .Release.Namespace }}
+  labels:
+    {{- include "comments-api.labels" . | nindent 4 }}
+spec:
+  selector:
+    matchLabels:
+      {{- include "comments-api.selectorLabels" . | nindent 6 }}
+  endpoints:
+    - port: http
+      path: /metrics
+      interval: {{ .Values.metrics.serviceMonitor.interval }}
+      scrapeTimeout: 10s
+{{- end }}
