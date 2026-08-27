@@ -38,8 +38,9 @@ resource "kubernetes_namespace_v1" "app" {
 
 # ---------------------------------------------------------------------------
 # RBAC extra para o pipeline (grupo do access entry do GitHub Actions).
-# AmazonEKSAdminPolicy (= ClusterRole admin) nao inclui CRDs; o chart cria um
-# ExternalSecret, entao concedemos so esse recurso, so neste namespace.
+# AmazonEKSAdminPolicy (= ClusterRole admin) nao inclui CRDs; o chart cria
+# ExternalSecret, ServiceMonitor e PrometheusRule - concedemos so esses
+# recursos, so neste namespace.
 # ---------------------------------------------------------------------------
 resource "kubernetes_role_v1" "deployer_crds" {
   metadata {
@@ -50,6 +51,12 @@ resource "kubernetes_role_v1" "deployer_crds" {
   rule {
     api_groups = ["external-secrets.io"]
     resources  = ["externalsecrets"]
+    verbs      = ["get", "list", "watch", "create", "update", "patch", "delete"]
+  }
+
+  rule {
+    api_groups = ["monitoring.coreos.com"]
+    resources  = ["servicemonitors", "prometheusrules"]
     verbs      = ["get", "list", "watch", "create", "update", "patch", "delete"]
   }
 }
