@@ -26,7 +26,11 @@ spec:
     template:
       engineVersion: v2
       data:
-        DATA_SOURCE_NAME: "postgresql://{{ printf "{{ .username }}" }}:{{ printf "{{ .password }}" }}@{{ .Values.database.host }}:{{ .Values.database.port }}/{{ .Values.database.name }}?sslmode=require"
+        # URI/USER/PASS separados: o exporter faz o encoding da senha (a senha
+        # gerenciada pelo RDS pode conter caracteres invalidos numa URL).
+        DATA_SOURCE_URI: "{{ .Values.database.host }}:{{ .Values.database.port }}/{{ .Values.database.name }}?sslmode=require"
+        DATA_SOURCE_USER: "{{ printf "{{ .username }}" }}"
+        DATA_SOURCE_PASS: "{{ printf "{{ .password }}" }}"
   data:
     - secretKey: username
       remoteRef:
@@ -98,8 +102,11 @@ metadata:
   name: {{ $name }}
   namespace: {{ .Release.Namespace }}
   labels:
-    {{- include "comments-api.labels" . | nindent 4 }}
+    # mesmos labels do pod: e o que o ServiceMonitor abaixo seleciona
+    {{- toYaml $labels | nindent 4 }}
     app.kubernetes.io/component: postgres-exporter
+    helm.sh/chart: {{ printf "%s-%s" .Chart.Name .Chart.Version }}
+    app.kubernetes.io/managed-by: {{ .Release.Service }}
 spec:
   type: ClusterIP
   ports:
