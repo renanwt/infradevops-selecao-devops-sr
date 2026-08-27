@@ -1,0 +1,199 @@
+# Alert rules da Comments API (PrometheusRule, lido pelo Prometheus Operator).
+# Provisionado por infra/terraform/10-platform/alerts.tf.
+#
+# Filosofia: alertar por SINTOMA que afeta usuario (SLO), nao por causa.
+# Burn rate multi-window (Google SRE Workbook): dispara so quando a janela
+# longa E a curta estao queimando -> menos falso positivo, reset rapido.
+#
+# SLO: disponibilidade 99,5% / 30d  ->  error budget = 0,5%
+#   burn rate 14,4 (1h + 5m)  = 2% do budget em 1h   -> critical (esgota em ~2 dias)
+#   burn rate 6    (6h + 30m) = 5% do budget em 6h   -> warning  (esgota em ~5 dias)
+apiVersion: monitoring.coreos.com/v1
+kind: PrometheusRule
+metadata:
+  name: comments-api
+  namespace: comments
+  labels:
+    app.kubernetes.io/name: comments-api
+    role: alert-rules
+spec:
+  groups:
+    # -------------------------------------------------------------------------
+    - name: comments-api.recording
+      interval: 30s
+      rules:
+        # Recording rules: as mesmas expressoes usadas no dashboard e nos alertas,
+        # pre-calculadas (barato de consultar, consistente entre paineis).
+        - record: comments_api:http_requests:rate5m
+          expr: sum(rate(http_requests_total{job="comments-api", route=~"/api/.*"}[5m]))
+        - record: comments_api:http_5xx_ratio:rate5m
+          expr: |
+            (sum(rate(http_requests_total{job="comments-api", route=~"/api/.*", status_class="5xx"}[5m])) or vector(0))
+            / sum(rate(http_requests_total{job="comments-api", route=~"/api/.*"}[5m]))
+        - record: comments_api:http_5xx_ratio:rate30m
+          expr: |
+            (sum(rate(http_requests_total{job="comments-api", route=~"/api/.*", status_class="5xx"}[30m])) or vector(0))
+            / sum(rate(http_requests_total{job="comments-api", route=~"/api/.*"}[30m]))
+        - record: comments_api:http_5xx_ratio:rate1h
+          expr: |
+            (sum(rate(http_requests_total{job="comments-api", route=~"/api/.*", status_class="5xx"}[1h])) or vector(0))
+            / sum(rate(http_requests_total{job="comments-api", route=~"/api/.*"}[1h]))
+        - record: comments_api:http_5xx_ratio:rate6h
+          expr: |
+            (sum(rate(http_requests_total{job="comments-api", route=~"/api/.*", status_class="5xx"}[6h])) or vector(0))
+            / sum(rate(http_requests_total{job="comments-api", route=~"/api/.*"}[6h]))
+        - record: comments_api:http_latency_p95:rate5m
+          expr: |
+            histogram_quantile(0.95, sum by (le) (rate(http_request_duration_seconds_bucket{job="comments-api", route=~"/api/.*"}[5m])))
+
+    # -------------------------------------------------------------------------
+    - name: comments-api.slo
+      rules:
+        - alert: CommentsApiHighErrorRate
+          expr: comments_api:http_5xx_ratio:rate5m > 0.01
+          for: 5m
+          labels:
+            severity: critical
+            service: comments-api
+          annotations:
+            summary: "Taxa de 5xx acima de 1% ({{ $value | humanizePercentage }})"
+            description: "Mais de 1% das requisicoes em /api/* retornaram 5xx nos ultimos 5 min."
+            runbook_url: "https://github.com/renanwt/infradevops-selecao-devops-sr/blob/main/ops/runbooks/incident-5xx.md"
+
+        - alert: CommentsApiHighLatencyP95
+          expr: comments_api:http_latency_p95:rate5m > 0.3
+          for: 10m
+          labels:
+            severity: warning
+            service: comments-api
+          annotations:
+            summary: "p95 acima de 300 ms ({{ $value | humanizeDuration }})"
+            description: "Latencia p95 de /api/* acima do SLO (300 ms) por 10 min."
+            runbook_url: "https://github.com/renanwt/infradevops-selecao-devops-sr/blob/main/ops/runbooks/incident-5xx.md#latencia"
+
+        # Burn rate rapido: 2% do error budget em 1 h. Multi-window: 1h E 5m.
+        - alert: CommentsApiSLOBurnRateFast
+          expr: |
+            comments_api:http_5xx_ratio:rate1h > (14.4 * 0.005)
+            and
+            comments_api:http_5xx_ratio:rate5m > (14.4 * 0.005)
+          for: 2m
+          labels:
+            severity: critical
+            service: comments-api
+            slo: availability
+          annotations:
+            summary: "Error budget queimando 14,4x (esgota em ~2 dias)"
+            description: "Taxa de erro 1h e 5m acima de 7,2%. Disponibilidade 99,5%/30d em risco imediato."
+            runbook_url: "https://github.com/renanwt/infradevops-selecao-devops-sr/blob/main/ops/slo/slo.md"
+
+        # Burn rate lento: 5% do error budget em 6 h. Multi-window: 6h E 30m.
+        - alert: CommentsApiSLOBurnRateSlow
+          expr: |
+            comments_api:http_5xx_ratio:rate6h > (6 * 0.005)
+            and
+            comments_api:http_5xx_ratio:rate30m > (6 * 0.005)
+          for: 15m
+          labels:
+            severity: warning
+            service: comments-api
+            slo: availability
+          annotations:
+            summary: "Error budget queimando 6x (esgota em ~5 dias)"
+            description: "Taxa de erro 6h e 30m acima de 3%. Tendencia consome o budget de 30d antes do prazo."
+            runbook_url: "https://github.com/renanwt/infradevops-selecao-devops-sr/blob/main/ops/slo/slo.md"
+
+    # -------------------------------------------------------------------------
+    - name: comments-api.availability
+      rules:
+        - alert: CommentsApiDown
+          expr: up{job="comments-api"} == 0
+          for: 2m
+          labels:
+            severity: critical
+            service: comments-api
+          annotations:
+            summary: "Prometheus nao consegue coletar {{ $labels.instance }}"
+            description: "Target da API down por 2 min (pod morto, NetworkPolicy ou /metrics quebrado)."
+            runbook_url: "https://github.com/renanwt/infradevops-selecao-devops-sr/blob/main/ops/runbooks/deploy.md"
+
+        - alert: CommentsApiNoTraffic
+          expr: sum(rate(http_requests_total{job="comments-api"}[10m])) == 0
+          for: 15m
+          labels:
+            severity: info
+            service: comments-api
+          annotations:
+            summary: "Zero requisicoes ha 15 min"
+            description: "Nenhuma requisicao chega a API. Verifique ALB, Ingress, DNS - ou e so silencio esperado."
+
+        - alert: CommentsApiPodNotReady
+          expr: |
+            kube_deployment_status_replicas_available{namespace="comments", deployment="comments-api"}
+            < kube_deployment_spec_replicas{namespace="comments", deployment="comments-api"}
+          for: 5m
+          labels:
+            severity: warning
+            service: comments-api
+          annotations:
+            summary: "Deployment com replicas indisponiveis"
+            description: "{{ $value }} replicas disponiveis, abaixo do desejado, por 5 min."
+            runbook_url: "https://github.com/renanwt/infradevops-selecao-devops-sr/blob/main/ops/runbooks/deploy.md"
+
+        - alert: CommentsApiPodCrashLooping
+          expr: |
+            increase(kube_pod_container_status_restarts_total{namespace="comments", container="api"}[15m]) > 3
+          labels:
+            severity: critical
+            service: comments-api
+          annotations:
+            summary: "Pod {{ $labels.pod }} reiniciando em loop"
+            description: "Mais de 3 restarts em 15 min. Provavel OOMKilled, liveness falhando ou erro no startup."
+            runbook_url: "https://github.com/renanwt/infradevops-selecao-devops-sr/blob/main/ops/runbooks/rollback.md"
+
+    # -------------------------------------------------------------------------
+    - name: comments-api.capacity
+      rules:
+        - alert: CommentsApiHpaAtMax
+          expr: |
+            kube_horizontalpodautoscaler_status_current_replicas{namespace="comments", horizontalpodautoscaler="comments-api"}
+            >= kube_horizontalpodautoscaler_spec_max_replicas{namespace="comments", horizontalpodautoscaler="comments-api"}
+          for: 15m
+          labels:
+            severity: warning
+            service: comments-api
+          annotations:
+            summary: "HPA no maximo de replicas ha 15 min"
+            description: "Sem margem para escalar. Aumentar maxReplicas ou investigar consumo de CPU."
+
+        - alert: CommentsApiDbPoolExhausted
+          expr: |
+            sum by (pod) (db_pool_connections{job="comments-api", state="in_use"}) >= 9
+          for: 5m
+          labels:
+            severity: warning
+            service: comments-api
+          annotations:
+            summary: "Pool de conexoes quase esgotado em {{ $labels.pod }}"
+            description: ">= 9 de 10 conexoes em uso por 5 min. Queries lentas ou banco travado; requisicoes vao esperar."
+            runbook_url: "https://github.com/renanwt/infradevops-selecao-devops-sr/blob/main/ops/runbooks/db-restore.md#conexoes"
+
+        - alert: RdsConnectionsHigh
+          expr: pg_stat_database_numbackends{datname="commentsdb"} > 70
+          for: 10m
+          labels:
+            severity: warning
+            service: comments-api
+          annotations:
+            summary: "RDS com {{ $value }} conexoes"
+            description: "db.t4g.micro aceita ~85 conexoes. 5 pods x 10 = 50 e o esperado no pico do HPA."
+
+        - alert: RdsExporterDown
+          expr: pg_up == 0
+          for: 5m
+          labels:
+            severity: warning
+            service: comments-api
+          annotations:
+            summary: "postgres_exporter sem conexao com o RDS"
+            description: "pg_up=0 por 5 min: credencial, rede (SG/NetworkPolicy) ou RDS indisponivel."
