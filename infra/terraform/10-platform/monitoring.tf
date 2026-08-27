@@ -196,12 +196,23 @@ resource "helm_release" "kube_prometheus_stack" {
           "alb.ingress.kubernetes.io/listen-ports"     = "[{\"HTTP\": 80}]"
         }
       }
-      # Grafana servido em sub-path: probes precisam do prefixo
-      livenessProbe  = { httpGet = { path = "/grafana/api/health", port = 3000 } }
-      readinessProbe = { httpGet = { path = "/grafana/api/health", port = 3000 } }
+      # probes no sub-path
+      livenessProbe = {
+        httpGet             = { path = "/grafana/api/health", port = 3000 }
+        initialDelaySeconds = 60
+        periodSeconds       = 10
+        timeoutSeconds      = 10
+        failureThreshold    = 10
+      }
+      readinessProbe = {
+        httpGet          = { path = "/grafana/api/health", port = 3000 }
+        periodSeconds    = 10
+        timeoutSeconds   = 10
+        failureThreshold = 6
+      }
       resources = {
-        requests = { cpu = "50m", memory = "128Mi" }
-        limits   = { memory = "256Mi" }
+        requests = { cpu = "100m", memory = "256Mi" }
+        limits   = { memory = "512Mi" }
       }
       sidecar = {
         dashboards = {
