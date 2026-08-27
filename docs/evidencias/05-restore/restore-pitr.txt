@@ -1,0 +1,21 @@
+# Restore do RDS por point-in-time (PITR) — 2026-08-27T03:12:51Z
+# origem: comments-api-dev | alvo: comments-api-dev-restore | restore-time: 2026-08-27T03:05:30Z (LatestRestorableTime era 2026-08-27T03:10:30+00:00)
+
+## 0. estado da origem
+  3315 linhas, ultima em 2026-08-27 03:13:08.968634+00
+
+## 1. restore-db-instance-to-point-in-time — 03:13:09Z
+comments-api-dev-restore	creating
+  aguardando available...
+  available em 22 min 23 s  -> endpoint comments-api-dev-restore.cbmuiwlq2oit.us-east-1.rds.amazonaws.com
+
+## 2. validacao (psql via pod efemero no cluster, sslmode=require)
+  origem     : 7065 linhas, ultima em 2026-08-27 03:15:33.121916+00
+  restaurado : 43 linhas, ultima em 2026-08-27 02:53:43.920339+00
+
+## 3. RPO / RTO
+  RPO (ponto restaurado)   : 2026-08-27T03:05:30Z — PITR permite qualquer instante nos ultimos 1 dia (retencao)
+  RTO (instancia available): 22 min 23 s (+ troca de database.host no values e rollout ~2 min)
+
+## 4. limpeza — delete-db-instance comments-api-dev-restore (skip-final-snapshot)
+deleting
