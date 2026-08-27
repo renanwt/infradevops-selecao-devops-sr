@@ -177,8 +177,28 @@ resource "helm_release" "kube_prometheus_stack" {
         userKey        = "admin-user"
         passwordKey    = "admin-password"
       }
-      persistence = { enabled = false }    # dashboards vem de ConfigMap versionado
-      service     = { type = "ClusterIP" } # acesso via port-forward (sem ALB extra)
+      persistence = { enabled = false } # dashboards vem de ConfigMap versionado
+      service     = { type = "ClusterIP" }
+
+      # Exposto no MESMO ALB da API (IngressGroup comments-api) em /grafana.
+      # group.order menor = regra avaliada antes do "/" da API.
+      ingress = {
+        enabled          = true
+        ingressClassName = "alb"
+        path             = "/grafana"
+        pathType         = "Prefix"
+        annotations = {
+          "alb.ingress.kubernetes.io/group.name"       = "comments-api"
+          "alb.ingress.kubernetes.io/group.order"      = "10"
+          "alb.ingress.kubernetes.io/scheme"           = "internet-facing"
+          "alb.ingress.kubernetes.io/target-type"      = "ip"
+          "alb.ingress.kubernetes.io/healthcheck-path" = "/grafana/api/health"
+          "alb.ingress.kubernetes.io/listen-ports"     = "[{\"HTTP\": 80}]"
+        }
+      }
+      # Grafana servido em sub-path: probes precisam do prefixo
+      livenessProbe  = { httpGet = { path = "/grafana/api/health", port = 3000 } }
+      readinessProbe = { httpGet = { path = "/grafana/api/health", port = 3000 } }
       resources = {
         requests = { cpu = "50m", memory = "128Mi" }
         limits   = { memory = "256Mi" }
@@ -197,6 +217,16 @@ resource "helm_release" "kube_prometheus_stack" {
       "grafana.ini" = {
         analytics = { check_for_updates = false, reporting_enabled = false }
         users     = { default_theme = "dark" }
+        server = {
+          root_url            = "%(protocol)s://%(domain)s/grafana/"
+          serve_from_sub_path = true
+        }
+        # Leitura anonima (Viewer): o avaliador abre o dashboard sem login.
+        # Edicao/admin continuam exigindo a senha do Secret grafana-admin.
+        "auth.anonymous" = {
+          enabled  = true
+          org_role = "Viewer"
+        }
       }
     }
 
