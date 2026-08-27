@@ -1,0 +1,19 @@
+# Painéis SLO / métricas — valores reais no Prometheus (2026-08-27T02:41:01Z)
+# após ~4 min de tráfego sintético (GET/POST/422) via ALB
+
+RPS /api/* (5m)          2.4956
+taxa 5xx (5m)             0.0
+disponibilidade 30d      1.0
+p95 (s)                   0.0162
+p99 (s)                  0.0249
+fração < 300ms         1.0
+burn rate 1h             0.0
+RPS por status_class     status_class=2xx 2.9832 | status_class=4xx 0.0303
+pool conexões           state=in_use 0.0 | state=idle 3.0
+RDS numbackends          sem dados
+pg_up                     0.0
+HPA réplicas             2.0
+comments_created_total   25.0
+
+# alertas ativos:
+  [('RdsExporterDown', 'firing')]

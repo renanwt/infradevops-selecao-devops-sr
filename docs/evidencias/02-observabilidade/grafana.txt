@@ -1,0 +1,21 @@
+# Grafana — dashboard provisionado pelo sidecar (2026-08-27T02:43:02Z)
+
+$ GET /api/health
+{
+  "database": "ok",
+  "version": "13.2.0",
+  "commit": "f681b1359f6a0b8ecb9f2c49a88ac72b75bde73b"
+}
+
+$ GET /api/datasources
+  Alertmanager uid=alertmanager type=alertmanager default=False
+  Prometheus uid=prometheus type=prometheus default=True
+
+$ GET /api/search?query=Comments
+  Comments API uid=bfwek8u6sfyf4d folder=- url=/dashboards/f/bfwek8u6sfyf4d/comments-api
+  Comments API uid=comments-api folder=Comments API url=/d/comments-api/comments-api
+
+$ GET /api/dashboards/uid/comments-api  (resumo)
+  title=Comments API version=1 provisioned=True folder=Comments API
+  rows: ['Visão SLO (alvo: disponibilidade 99,5', 'Tráfego', 'Latência', 'Erros', 'Saturação (CPU / memória / HPA)', 'Banco de dados (pool da app + RDS via ', 'Deploys']
+  paineis: 21
