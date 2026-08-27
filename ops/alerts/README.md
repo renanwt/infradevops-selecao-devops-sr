@@ -8,7 +8,7 @@
 | `CommentsApiHighLatencyP95` | p95 > 300 ms | 10m | warning |
 | `CommentsApiSLOBurnRateFast` | burn rate 14,4× em 1h **e** 5m | 2m | critical |
 | `CommentsApiSLOBurnRateSlow` | burn rate 6× em 6h **e** 30m | 15m | warning |
-| `CommentsApiDown` | `up == 0` | 2m | critical |
+| `CommentsApiDown` | `up == 0` **ou** `absent(up)` | 2m | critical |
 | `CommentsApiNoTraffic` | 0 req/s por 10m | 15m | info |
 | `CommentsApiPodNotReady` | disponíveis < desejadas | 5m | warning |
 | `CommentsApiPodCrashLooping` | > 3 restarts / 15m | — | critical |
@@ -25,12 +25,17 @@ Um alerta simples "erro > 1%" dispara em qualquer pico curto e não diz se o SLO
 
 ## Testar um alerta
 
+`kubectl scale --replicas=0` **não** serve: sem endpoints o Prometheus remove o target (a série `up` some) e `PodNotReady` compara com `spec.replicas`, que o scale zera. Por isso `CommentsApiDown` usa `absent(up{job="comments-api"})`. Teste sem derrubar pods, quebrando o seletor do Service:
+
 ```sh
-# derruba a API -> CommentsApiDown (2 min) e CommentsApiPodNotReady (5 min)
-kubectl -n comments scale deploy/comments-api --replicas=0
+kubectl -n comments patch svc comments-api -p '{"spec":{"selector":{"app.kubernetes.io/name":"x","app.kubernetes.io/instance":"comments-api"}}}'
+# ~2-3 min depois: CommentsApiDown firing
 kubectl -n monitoring port-forward svc/kps-alertmanager 9093:9093   # http://localhost:9093
-kubectl -n comments scale deploy/comments-api --replicas=2           # (HPA reassume)
+# restaurar (o proximo helm upgrade tambem restaura):
+kubectl -n comments patch svc comments-api -p '{"spec":{"selector":{"app.kubernetes.io/name":"comments-api","app.kubernetes.io/instance":"comments-api"}}}'
 ```
+
+Evidência de um teste real: `docs/evidencias/02-observabilidade/alerta-teste-controlado.txt`.
 
 ## Notificações
 

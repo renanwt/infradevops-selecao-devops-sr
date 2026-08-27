@@ -106,15 +106,18 @@ spec:
     # -------------------------------------------------------------------------
     - name: comments-api.availability
       rules:
+        # `absent()`: quando nao ha pods Ready o Service fica sem endpoints e o
+        # target SOME (a serie `up` deixa de existir) - `up == 0` sozinho nunca
+        # dispararia. Descoberto no teste controlado (docs/evidencias/02).
         - alert: CommentsApiDown
-          expr: up{job="comments-api"} == 0
+          expr: up{job="comments-api"} == 0 or absent(up{job="comments-api"})
           for: 2m
           labels:
             severity: critical
             service: comments-api
           annotations:
             summary: "Prometheus nao consegue coletar {{ $labels.instance }}"
-            description: "Target da API down por 2 min (pod morto, NetworkPolicy ou /metrics quebrado)."
+            description: "Nenhum target da API coletavel por 2 min: sem pods Ready, NetworkPolicy ou /metrics quebrado."
             runbook_url: "https://github.com/renanwt/infradevops-selecao-devops-sr/blob/main/ops/runbooks/deploy.md"
 
         - alert: CommentsApiNoTraffic
