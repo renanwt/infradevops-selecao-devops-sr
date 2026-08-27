@@ -41,3 +41,9 @@ variable "metrics_server_chart_version" {
   type        = string
   default     = "3.14.0"
 }
+
+variable "kube_prometheus_stack_chart_version" {
+  description = "Versao do chart prometheus-community/kube-prometheus-stack."
+  type        = string
+  default     = "88.5.4"
+}
