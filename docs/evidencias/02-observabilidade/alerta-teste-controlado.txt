@@ -1,0 +1,43 @@
+# Teste controlado de alerta — 2026-08-27T02:57:51Z
+# Método: quebrar o seletor do Service. Pods continuam Running; o Prometheus perde o target.
+# Por que não 'scale --replicas=0': sem endpoints a série 'up' SOME (up==0 nunca dispara) e
+# PodNotReady compara com spec.replicas, que o scale zera. Regra corrigida com absent().
+
+## 0. estado inicial
+$ kubectl -n comments get endpoints comments-api
+NAME           ENDPOINTS                           AGE
+comments-api   10.0.71.248:8000,10.0.71.249:8000   3h28m
+$ alertas comments-api ativos
+  (vazio = nenhum)
+
+## 1. quebrando o seletor do Service — 02:57:53Z
+$ kubectl -n comments patch svc comments-api -p '{"spec":{"selector":{"app.kubernetes.io/name":"comments-api-quebrado","app.kubernetes.io/instance":"comments-api"}}}'
+service/comments-api patched
+$ kubectl -n comments get endpoints comments-api
+NAME           ENDPOINTS   AGE
+comments-api   <none>      3h28m
+$ curl ALB /health (ALB usa target-type ip: segue respondendo, o problema é só de coleta)
+{"status":"ok"} [HTTP 200]
+
+## 2. Prometheus /api/v1/alerts — após 179s (for: 2m + avaliação)
+  CommentsApiDown            firing   severity=critical | Prometheus nao consegue coletar 
+
+## 3. Alertmanager /api/v2/alerts
+  CommentsApiDown            active   startsAt=2026-08-27T03:00:56Z receiver=['null']
+
+$ kubectl -n comments get pods -l app.kubernetes.io/component=api   (intactos durante o teste)
+NAME                            READY   STATUS    RESTARTS   AGE
+comments-api-55f9dbf8cd-cm7gn   1/1     Running   0          7m45s
+comments-api-55f9dbf8cd-rjnq7   1/1     Running   0          7m30s
+
+## 4. restaurando o seletor — 03:00:58Z
+service/comments-api patched
+$ kubectl -n comments get endpoints comments-api
+NAME           ENDPOINTS                           AGE
+comments-api   10.0.71.248:8000,10.0.71.249:8000   3h31m
+
+## 5. após restaurar (+32s): alertas comments-api ativos
+  (vazio = CommentsApiDown resolvido)
+
+$ curl ALB /health
+{"status":"ok"} [HTTP 200]
